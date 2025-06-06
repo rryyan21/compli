@@ -252,28 +252,39 @@ export default function Home() {
           className="mt-16 bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl max-w-4xl w-full text-[var(--text-primary)] space-y-6 text-left backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
-            {url && (
-              <img
-                src={`https://logo.clearbit.com/${new URL(url).hostname}`}
-                alt="Company Logo"
-                className="w-12 h-12 object-contain rounded-md border"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-            )}
+            {(() => {
+              try {
+                const parsedUrl = new URL(url);
+                const host = parsedUrl.hostname;
 
-            <div>
-              <p className="text-lg font-semibold">
-                {url ? new URL(url).hostname.replace("www.", "") : ""}
-              </p>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-white/50 break-all hover:text-white/70 transition"
-              >
-                {url}
-              </a>
-            </div>
+                return (
+                  <>
+                    <img
+                      src={`https://logo.clearbit.com/${host}`}
+                      alt="Company Logo"
+                      className="w-12 h-12 object-contain rounded-md border"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <div>
+                      <p className="text-lg font-semibold">
+                        {host.replace("www.", "")}
+                      </p>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-white/50 break-all hover:text-white/70 transition"
+                      >
+                        {url}
+                      </a>
+                    </div>
+                  </>
+                );
+              } catch (err) {
+                console.warn("Invalid URL provided:", url);
+                return null;
+              }
+            })()}
           </div>
 
           <div className="flex gap-3 flex-wrap">
