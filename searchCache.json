@@ -205,5 +205,38 @@
     "hasCompanyInfo": true,
     "totalInterviews": 20,
     "questionsFound": 20
+  },
+  "tesla": {
+    "employer": "Tesla",
+    "difficulty": "AVERAGE",
+    "experience": "POSITIVE",
+    "jobTitle": "Software Engineer",
+    "outcome": "NO_OFFER",
+    "process": "I applied for the team that was working on Optimus. The first round was resume review. We had a standard discussion on projects and why you want to join. The next round was a coding interview in C++. The question given in the coding interview was very vague and I was asked to choose everything for myself when I asked for clarity.",
+    "questions": [
+      "More of an introduction, what I was looking for, and experience. ",
+      "Does a hotdog split lengthwise or widthwise, why?",
+      "Asked statistics questions about battery pack failure analysis ",
+      "Tell me about a time you had to use data to influence a decision made by senior leadership. What was your approach and what was the result?",
+      "Tell me about your background",
+      "All process under NDA. Cant be disclosed",
+      "Standard interview questions like \"what was a challenge you were able to overcome\" or \"how did you handle a disagreement with a superior\". Case study questions were extremely detailed, expect deep follow up in 1:1s following presentation",
+      "Why interested in being a TPM over a cell engineering role? ",
+      "The final interview consisted of 3 different people focusing on certain aspects - UX, Tech, PM skills \n\nBut all basic behavioral questions, so focus on all these aspects in your answers ",
+      "How do you act under pressure \nWhy Tesla \nAre you interested in high level conceptual planning vs technical design\nExplain a complex project you have worked on and the challenges you faced \nHow do you work with inefficient or difficult team members ",
+      "How do you work with others?",
+      "Describe your most difficult problem you solved",
+      "Reorder point? How will classify inventory?",
+      "General questions about your personality and experiences.",
+      "Experience in simulation? and questions related to the supply chain",
+      "Why do you want to work here. ",
+      "What's the principal stress and strain?",
+      "Some hardware related questions like Power system and LabView. ",
+      "Write a method in C++ to find the median of a triangle. Did not mention any input data type, or what is given."
+    ],
+    "interviewCount": 20,
+    "hasCompanyInfo": true,
+    "totalInterviews": 20,
+    "questionsFound": 19
   }
 }
