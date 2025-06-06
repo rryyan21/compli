@@ -212,19 +212,51 @@ export async function GET(req: Request) {
     let allQuestions: string[] = [];
     let sampleInterview = interviews[0]; // Use first interview for other details
 
-    interviews.slice(0, 5).forEach((interview: any) => {
+    console.log("🔍 Processing interviews for questions...");
+    
+    // Process all interviews, not just first 5
+    interviews.forEach((interview: any, index: number) => {
+      console.log(`🔍 Interview ${index + 1}:`, {
+        hasUserQuestions: !!interview.userQuestions,
+        userQuestionsType: typeof interview.userQuestions,
+        userQuestionsLength: interview.userQuestions?.length || 0,
+        isArray: Array.isArray(interview.userQuestions)
+      });
+      
       if (interview.userQuestions && Array.isArray(interview.userQuestions)) {
         const questions = interview.userQuestions
-          .map((q: any) => q.question)
-          .filter((q: string) => q && q.trim().length > 0);
+          .map((q: any) => {
+            // Log the structure of each question
+            console.log("🔍 Question structure:", typeof q, Object.keys(q || {}));
+            return q.question || q.text || q.content || q;
+          })
+          .filter((q: string) => q && typeof q === 'string' && q.trim().length > 0);
+        
+        console.log(`🔍 Extracted ${questions.length} questions from interview ${index + 1}`);
         allQuestions.push(...questions);
+      }
+      
+      // Also check if there are questions in the processDescription
+      if (interview.processDescription && typeof interview.processDescription === 'string') {
+        // Look for questions in the process description (they often contain "?" marks)
+        const processQuestions = interview.processDescription
+          .split(/[.!]/)
+          .filter((sentence: string) => sentence.includes('?'))
+          .map((q: string) => q.trim())
+          .filter((q: string) => q.length > 10); // Only meaningful questions
+        
+        if (processQuestions.length > 0) {
+          console.log(`🔍 Found ${processQuestions.length} questions in process description`);
+          allQuestions.push(...processQuestions);
+        }
       }
     });
 
-    // Remove duplicates and limit to 10 questions
-    const uniqueQuestions = [...new Set(allQuestions)].slice(0, 10);
+    // Remove duplicates and limit to 15 questions
+    const uniqueQuestions = [...new Set(allQuestions)].slice(0, 15);
 
-    console.log("🔍 Extracted questions:", uniqueQuestions.length);
+    console.log("🔍 Total extracted questions:", uniqueQuestions.length);
+    console.log("🔍 Sample questions:", uniqueQuestions.slice(0, 3));
 
     const result = {
       employer: companyName,
