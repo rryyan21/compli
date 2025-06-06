@@ -54,6 +54,26 @@ const SkeletonQuestion = () => (
   </div>
 );
 
+// Safe localStorage utilities
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  },
+};
+
 export default function Home() {
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState("");
@@ -69,18 +89,28 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "news" | "interviews"
   >("overview");
+  const [isClient, setIsClient] = useState(false);
 
   const resultRef = useRef<HTMLDivElement>(null);
 
+  // Handle client-side hydration
   useEffect(() => {
-    const stored = localStorage.getItem("searchHistory");
-    if (stored) setHistory(JSON.parse(stored));
+    setIsClient(true);
+    const stored = safeLocalStorage.getItem("searchHistory");
+    if (stored) {
+      try {
+        setHistory(JSON.parse(stored));
+      } catch {
+        // If parsing fails, start with empty history
+        setHistory([]);
+      }
+    }
   }, []);
 
   const updateHistory = (name: string) => {
     const updated = [name, ...history.filter((h) => h !== name)].slice(0, 8);
     setHistory(updated);
-    localStorage.setItem("searchHistory", JSON.stringify(updated));
+    safeLocalStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
   const searchCompany = async (input?: string) => {
@@ -194,8 +224,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Recent Searches */}
-      {history.length > 0 && (
+      {/* Recent Searches - Only render on client side */}
+      {isClient && history.length > 0 && (
         <div className="mt-10">
           <h2 className="font-semibold text-lg mb-2">Recent Searches</h2>
           <div className="flex flex-wrap justify-center gap-2">
