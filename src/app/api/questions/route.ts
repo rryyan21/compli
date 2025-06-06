@@ -44,7 +44,9 @@ export async function GET(req: Request) {
       console.error("🚨 Search API Error:", searchRes.status, searchRes.statusText);
       return NextResponse.json({ 
         error: `API returned ${searchRes.status}: ${searchRes.statusText}`, 
-        questions: [] 
+        questions: [],
+        employer: company,
+        hasCompanyInfo: false
       });
     }
 
@@ -64,7 +66,9 @@ export async function GET(req: Request) {
       console.log("🚨 API Error:", searchData.error || "API returned status: false");
       return NextResponse.json({ 
         error: "API Error: " + (searchData.error || "Request failed"), 
-        questions: [] 
+        questions: [],
+        employer: company,
+        hasCompanyInfo: false
       });
     }
     
@@ -75,6 +79,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ 
         error: "No companies found for search query", 
         questions: [],
+        employer: company,
+        hasCompanyInfo: false,
         searchedFor: company
       });
     }
@@ -82,7 +88,7 @@ export async function GET(req: Request) {
     // Get the first matching result
     const firstResult = results[0];
     const employerId = firstResult.employer?.id;
-    const companyName = firstResult.employer?.name || firstResult.employer?.shortName;
+    const companyName = firstResult.employer?.name || firstResult.employer?.shortName || company;
     
     console.log("🔍 Found Company:", companyName, "ID:", employerId);
 
@@ -90,6 +96,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ 
         error: "Employer ID not found in search results", 
         questions: [],
+        employer: companyName,
+        hasCompanyInfo: true,
         debug: {
           firstResultKeys: Object.keys(firstResult),
           employerKeys: firstResult.employer ? Object.keys(firstResult.employer) : null
@@ -99,7 +107,7 @@ export async function GET(req: Request) {
 
     // Step 2: Get interview data using the employerId
     const interviewRes = await fetch(
-      `https://glassdoor-real-time.p.rapidapi.com/companies/interviews?companyId=${employerId}&limit=10`,
+      `https://glassdoor-real-time.p.rapidapi.com/companies/interviews?companyId=${employerId}&limit=20`,
       {
         method: "GET",
         headers: {
@@ -113,7 +121,9 @@ export async function GET(req: Request) {
       console.error("🚨 Interview API Error:", interviewRes.status, interviewRes.statusText);
       return NextResponse.json({ 
         error: `Interview API returned ${interviewRes.status}: ${interviewRes.statusText}`, 
-        questions: [] 
+        questions: [],
+        employer: companyName,
+        hasCompanyInfo: true
       });
     }
 
@@ -181,17 +191,18 @@ export async function GET(req: Request) {
           const overviewData = await overviewRes.json();
           console.log("🔍 Overview data available:", !!overviewData.data);
           
-          // Return basic company info
+          // Return basic company info with fallback values
           return NextResponse.json({ 
             employer: companyName,
-            difficulty: "Unknown",
-            experience: "Unknown", 
+            difficulty: "Not specified",
+            experience: "Not specified", 
             jobTitle: "Various positions",
-            outcome: "Unknown",
-            process: "Interview data not available through API",
+            outcome: "Not specified",
+            process: "Interview process information not available",
             questions: [],
             hasCompanyInfo: true,
-            note: "Company found but no interview details available"
+            interviewCount: 0,
+            note: "Company found but no interview details are publicly available"
           });
         }
       } catch (overviewError) {
@@ -201,10 +212,16 @@ export async function GET(req: Request) {
       // Final fallback
       return NextResponse.json({ 
         employer: companyName,
-        error: "No interview data available for this company",
+        difficulty: "Not specified",
+        experience: "Not specified", 
+        jobTitle: "Various positions",
+        outcome: "Not specified",
+        process: "Interview process information not available",
         questions: [],
         hasCompanyInfo: true,
-        note: "This company may not have public interview data available"
+        interviewCount: 0,
+        note: "This company may not have public interview data available",
+        error: "No interview data available for this company"
       });
     }
 
@@ -214,7 +231,35 @@ export async function GET(req: Request) {
 
     console.log("🔍 Processing interviews for questions...");
     
-    // Process all interviews, not just first 5
+    // Define a type for interview objects
+    type Interview = {
+      difficulty?: string;
+      experience?: string;
+      jobTitle?: { text?: string } | string;
+      outcome?: string;
+      processDescription?: string;
+      userQuestions?: Array<{ question?: string; text?: string; content?: string } | string>;
+    };
+
+    // Collect statistics from all interviews
+    const difficulties = interviews.map((i: Interview) => i.difficulty).filter(Boolean);
+    const experiences = interviews.map((i: Interview) => i.experience).filter(Boolean);
+    const jobTitles = interviews.map((i: Interview) => 
+      typeof i.jobTitle === 'object' && i.jobTitle?.text ? i.jobTitle.text : i.jobTitle
+    ).filter(Boolean);
+    const outcomes = interviews.map((i: Interview) => i.outcome).filter(Boolean);
+    
+    // Get most common values
+    const getMostCommon = (arr: string[]) => {
+      if (arr.length === 0) return "Not specified";
+      const counts = arr.reduce((acc, val) => {
+        acc[val] = (acc[val] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      return Object.entries(counts).sort(([,a], [,b]) => b - a)[0][0];
+    };
+
+    // Process all interviews for questions
     interviews.forEach((interview: any, index: number) => {
       console.log(`🔍 Interview ${index + 1}:`, {
         hasUserQuestions: !!interview.userQuestions,
@@ -230,7 +275,7 @@ export async function GET(req: Request) {
             console.log("🔍 Question structure:", typeof q, Object.keys(q || {}));
             return q.question || q.text || q.content || q;
           })
-          .filter((q: string) => q && typeof q === 'string' && q.trim().length > 0);
+          .filter((q: string) => q && typeof q === 'string' && q.trim().length > 10);
         
         console.log(`🔍 Extracted ${questions.length} questions from interview ${index + 1}`);
         allQuestions.push(...questions);
@@ -243,7 +288,7 @@ export async function GET(req: Request) {
           .split(/[.!]/)
           .filter((sentence: string) => sentence.includes('?'))
           .map((q: string) => q.trim())
-          .filter((q: string) => q.length > 10); // Only meaningful questions
+          .filter((q: string) => q.length > 15); // Only meaningful questions
         
         if (processQuestions.length > 0) {
           console.log(`🔍 Found ${processQuestions.length} questions in process description`);
@@ -252,21 +297,31 @@ export async function GET(req: Request) {
       }
     });
 
-    // Remove duplicates and limit to 15 questions
-    const uniqueQuestions = [...new Set(allQuestions)].slice(0, 15);
+    // Remove duplicates and limit to 20 questions
+    const uniqueQuestions = [...new Set(allQuestions)].slice(0, 20);
 
     console.log("🔍 Total extracted questions:", uniqueQuestions.length);
     console.log("🔍 Sample questions:", uniqueQuestions.slice(0, 3));
 
+    // Get the longest process description for better context
+    const processDescriptions = interviews
+      .map((i: { processDescription?: string }) => i.processDescription)
+      .filter(Boolean)
+      .sort((a: string, b: string) => b.length - a.length);
+
     const result = {
       employer: companyName,
-      difficulty: sampleInterview?.difficulty || "Unknown",
-      experience: sampleInterview?.experience || "Unknown", 
-      jobTitle: sampleInterview?.jobTitle?.text || "Various positions",
-      outcome: sampleInterview?.outcome || "Unknown",
-      process: sampleInterview?.processDescription || "No process description available",
+      difficulty: getMostCommon(difficulties),
+      experience: getMostCommon(experiences), 
+      jobTitle: getMostCommon(jobTitles),
+      outcome: getMostCommon(outcomes),
+      process: processDescriptions[0] || "No detailed process description available",
       questions: uniqueQuestions,
-      interviewCount: interviews.length
+      interviewCount: interviews.length,
+      hasCompanyInfo: true,
+      // Additional metadata
+      totalInterviews: interviews.length,
+      questionsFound: uniqueQuestions.length
     };
 
     // Cache the result
@@ -284,6 +339,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ 
       error: "Request failed", 
       questions: [],
+      employer: company,
+      difficulty: "Not specified",
+      experience: "Not specified",
+      jobTitle: "Various positions",
+      outcome: "Not specified",
+      process: "Error occurred while fetching interview data",
+      hasCompanyInfo: false,
+      interviewCount: 0,
       errorMessage: err?.message || "Unknown error",
       stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined
     });

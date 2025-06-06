@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Info, Newspaper } from "lucide-react";
+import { Info, Newspaper, Users, MessageCircle, Briefcase } from "lucide-react";
 
 const popularCompanies = [
   "Google",
@@ -15,16 +15,34 @@ const popularCompanies = [
   "NVIDIA",
 ];
 
+interface InterviewData {
+  employer: string;
+  difficulty: string;
+  experience: string;
+  jobTitle: string;
+  outcome: string;
+  process: string;
+  questions: string[];
+  interviewCount?: number;
+  hasCompanyInfo?: boolean;
+  note?: string;
+  error?: string; // Added error property
+}
+
 export default function Home() {
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
   const [news, setNews] = useState<{ title: string; link: string }[]>([]);
   const [questions, setQuestions] = useState<string[]>([]);
-  const [interviewData, setInterviewData] = useState<any>(null);
+  const [interviewData, setInterviewData] = useState<InterviewData | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "news">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "news" | "interviews"
+  >("overview");
 
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -45,26 +63,35 @@ export default function Home() {
 
     setLoading(true);
 
-    const res = await fetch(`/api/search?company=${encodeURIComponent(query)}`);
-    const data = await res.json();
-    setUrl(data.url);
-    setSummary(data.summary);
-    setNews(data.news || []);
-    setActiveTab("overview");
-    updateHistory(query);
+    try {
+      // Fetch company overview and website
+      const res = await fetch(
+        `/api/search?company=${encodeURIComponent(query)}`
+      );
+      const data = await res.json();
+      setUrl(data.url);
+      setSummary(data.summary);
+      setNews(data.news || []);
+      setActiveTab("overview");
+      updateHistory(query);
 
-    const qRes = await fetch(
-      `/api/questions?company=${encodeURIComponent(query)}`
-    );
-    const qData = await qRes.json();
-    setQuestions(qData.questions || []);
-    setInterviewData(qData.interviewData || null);
+      // Fetch interview data
+      const qRes = await fetch(
+        `/api/questions?company=${encodeURIComponent(query)}`
+      );
+      const qData = await qRes.json();
 
-    setLoading(false);
-
-    setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+      // Set the interview data from the API response
+      setInterviewData(qData);
+      setQuestions(qData.questions || []);
+    } catch (error) {
+      console.error("Error fetching company data:", error);
+    } finally {
+      setLoading(false);
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
   };
 
   const buttonStyle =
@@ -148,7 +175,7 @@ export default function Home() {
       {url && (
         <div
           ref={resultRef}
-          className="mt-16 bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl max-w-xl w-full text-[var(--text-primary)] space-y-6 text-left backdrop-blur-sm"
+          className="mt-16 bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl max-w-4xl w-full text-[var(--text-primary)] space-y-6 text-left backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
             <img
@@ -172,11 +199,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setActiveTab("overview")}
               className={tabStyle("overview")}
             >
+              <Info size={14} className="inline mr-1" />
               Overview
             </button>
             {news.length > 0 && (
@@ -184,7 +212,17 @@ export default function Home() {
                 onClick={() => setActiveTab("news")}
                 className={tabStyle("news")}
               >
+                <Newspaper size={14} className="inline mr-1" />
                 News
+              </button>
+            )}
+            {interviewData && (
+              <button
+                onClick={() => setActiveTab("interviews")}
+                className={tabStyle("interviews")}
+              >
+                <Users size={14} className="inline mr-1" />
+                Interviews
               </button>
             )}
           </div>
@@ -204,44 +242,6 @@ export default function Home() {
                   <span className="tracking-wide">Mission & Values</span>
                 </h4>
                 <p className="text-base leading-relaxed italic">"{summary}"</p>
-
-                {interviewData && (
-                  <div className="mt-4 space-y-2">
-                    <h4 className="font-semibold text-base">
-                      Interview Experience
-                    </h4>
-                    <p className="text-sm text-white/80">
-                      Experience:{" "}
-                      {interviewData.experience?.toLowerCase() || "N/A"}
-                      <br />
-                      Difficulty:{" "}
-                      {interviewData.difficulty?.toLowerCase() || "N/A"}
-                      <br />
-                      Method:{" "}
-                      {interviewData.source?.replace(/_/g, " ").toLowerCase() ||
-                        "N/A"}
-                    </p>
-                    <p className="text-sm text-white/80 mt-2">
-                      {interviewData.processDescription ||
-                        "No description provided."}
-                    </p>
-
-                    {interviewData.userQuestions?.length > 0 && (
-                      <div className="mt-2">
-                        <h4 className="font-semibold text-base mb-1">
-                          Sample Questions
-                        </h4>
-                        <ul className="list-disc list-inside text-sm text-white/80 space-y-1">
-                          {interviewData.userQuestions.map(
-                            (q: any, i: number) => (
-                              <li key={i}>{q.question}</li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
               </motion.div>
             )}
 
@@ -271,6 +271,115 @@ export default function Home() {
                     </p>
                   </a>
                 ))}
+              </motion.div>
+            )}
+
+            {activeTab === "interviews" && interviewData && (
+              <motion.div
+                key="interviews"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
+              >
+                <h4 className="font-semibold text-base mb-4 flex items-center gap-2">
+                  <Users size={16} />
+                  <span className="tracking-wide">Interview Insights</span>
+                </h4>
+
+                {/* Interview Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <h5 className="font-medium text-sm text-white/70 mb-2">
+                      Experience Rating
+                    </h5>
+                    <p className="text-lg font-semibold capitalize">
+                      {interviewData.experience || "Not specified"}
+                    </p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <h5 className="font-medium text-sm text-white/70 mb-2">
+                      Difficulty Level
+                    </h5>
+                    <p className="text-lg font-semibold capitalize">
+                      {interviewData.difficulty || "Not specified"}
+                    </p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <h5 className="font-medium text-sm text-white/70 mb-2">
+                      Common Position
+                    </h5>
+                    <p className="text-lg font-semibold">
+                      {interviewData.jobTitle || "Various positions"}
+                    </p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <h5 className="font-medium text-sm text-white/70 mb-2">
+                      Interview Count
+                    </h5>
+                    <p className="text-lg font-semibold">
+                      {interviewData.interviewCount
+                        ? `${interviewData.interviewCount} reviews`
+                        : "Multiple"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Interview Process */}
+                {interviewData.process &&
+                  interviewData.process !==
+                    "No process description available" && (
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                      <h5 className="font-medium text-base mb-3 flex items-center gap-2">
+                        <Briefcase size={16} />
+                        Interview Process
+                      </h5>
+                      <p className="text-sm text-white/90 leading-relaxed">
+                        {interviewData.process}
+                      </p>
+                    </div>
+                  )}
+
+                {/* Sample Questions */}
+                {questions.length > 0 && (
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <h5 className="font-medium text-base mb-3 flex items-center gap-2">
+                      <MessageCircle size={16} />
+                      Sample Interview Questions ({questions.length})
+                    </h5>
+                    <div className="space-y-3 max-h-80 overflow-y-auto">
+                      {questions.map((question, index) => (
+                        <div
+                          key={index}
+                          className="bg-white/5 border border-white/10 p-3 rounded-lg"
+                        >
+                          <p className="text-sm text-white/90 leading-relaxed">
+                            {question}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Note for limited data */}
+                {interviewData.note && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl">
+                    <p className="text-sm text-yellow-200">
+                      <strong>Note:</strong> {interviewData.note}
+                    </p>
+                  </div>
+                )}
+
+                {/* Error message */}
+                {interviewData.error && (
+                  <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+                    <p className="text-sm text-red-200">
+                      <strong>Notice:</strong> {interviewData.error}
+                    </p>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
