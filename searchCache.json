@@ -171,5 +171,39 @@
     "hasCompanyInfo": true,
     "totalInterviews": 20,
     "questionsFound": 20
+  },
+  "pinterest": {
+    "employer": "Pinterest",
+    "difficulty": "AVERAGE",
+    "experience": "POSITIVE",
+    "jobTitle": "Software Engineer",
+    "outcome": "NO_OFFER",
+    "process": "Recruiter reached out.\nFirst was the coding round.\nThen there was virtual onsite round.\n\nI was interviewing for an intermediate level and for the virtual onsite round all the three interviewers who asked me coding questions were intermediate level with fewer years of experience than me. That is a really bad way of hiring by these companies because a rather Junior interviewer just sits there without guiding you properly, and can not assess your true experience level. \n\nAt the end, I received an email from a different recruiter I hadn't met during process telling me \"it was nice to meet you\" and giving me the rejection news and telling me they regret they can not give in depth feedback. It felt very impersonal for me as a candidate who made it to the last stage of interview process.",
+    "questions": [
+      "Tell us about your current position, what does your day to day look like",
+      "I got an email and they set up an online interview. First step was coding interview. It was online. Two medium to hard Leetcode problems. one question was sorting.",
+      "How would you use data to differentiate between users' general interest in home decor vs. users who are shopping for a home decor project?",
+      "Era un problema tipo leetcode, pero relacionado con Pinterest.",
+      "Sort 2d array and return top k elements",
+      "Regularization methods for ML models",
+      "SQL medium leet code questions",
+      "When did you take a lead on a project?",
+      "Why the interest on be part of Pinterest",
+      "Basic questions about experience and how you feel you would fit in",
+      "How would I help advertisers on Pinterest find emerging trends signaling consumer interest.",
+      "Question about truncating a number representation with some basic logic using strings and loops",
+      "Build a todo list in React.",
+      "por que se candidatou para vaga? \npedem uma redação de tema livre.",
+      "How I stay up to date on latest trends.",
+      "What do you think is the biggest challenge the digital media industry is facing today?",
+      "Dado un arreglo de objetos, cada uno con un id y una propiedad height, distribuirlos en columnas simulando el comportamiento del grid de Pinterest, de forma que los objetos se posicionen para balancear la altura de las columnas.",
+      "Al tocar un botón con un emoji, deben generarse copias del emoji que flotan hacia arriba como globos. Si el botón se mantiene presionado, los emojis deben seguir apareciendo continuamente hasta que se suelte el dedo.",
+      "Dada una matriz NxN con algunas celdas marcadas como “pared”, al tocar una celda que no sea pared, se debe llenar de color esa celda y propagar el color a las celdas adyacentes, evitando cruzar paredes. El resultado final debe ser que todas las áreas accesibles desde el punto inicial queden coloreadas, sin atravesar las paredes.",
+      "diseñar un design system para una aplicación de galería de fotos con funcionalidad de sincronización como Apple Photos o Google Photos."
+    ],
+    "interviewCount": 20,
+    "hasCompanyInfo": true,
+    "totalInterviews": 20,
+    "questionsFound": 20
   }
 }
