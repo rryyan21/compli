@@ -66,6 +66,7 @@ export async function GET(req: Request) {
   }
 
   const summary = extractSummary(result.html);
+  console.log("News results:", news);
 
   return NextResponse.json({
     url: result.url,
