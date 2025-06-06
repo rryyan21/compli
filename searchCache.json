@@ -238,5 +238,39 @@
     "hasCompanyInfo": true,
     "totalInterviews": 20,
     "questionsFound": 19
+  },
+  "netflix": {
+    "employer": "Netflix",
+    "difficulty": "AVERAGE",
+    "experience": "POSITIVE",
+    "jobTitle": "Content Strategy Manager",
+    "outcome": "NO_OFFER",
+    "process": "I applied online. The job was advertised as a remote position and I’m based in NYC. I told the recruiter I already had an offer from another company and asked if she could schedule other interviews prematurely. She asked me for the dates I was available and I gave dates for next week and also said the weekend would work if that’s possible (and given Netflix’s supposed culture of ppl with high talent and ambition and genuine fostering of talent I thought maybe that would be reasonable). The recruiter instead mocked me for even raising that as a possibility and said “what kind of culture would Netflix have if we made people work weekends” even though I didn’t imply they should be making people work weekends (if anything I was thinking people would volunteer since they love their jobs—how crazy of me).\n\nThe first interview went really well. The engineer was very senior and quizzed me on small things ranging from code quality to problem solving / code design.\n\nThe next few rounds consisted of leetcode style and system design. the system design was very thorough.\n\nAt the end i received an offer on a Friday. They said it would have to be in person actually. I said yes to the offer and then on Monday said i can't accept if i have to relocate to California because of my girlfriend / I grew up in NYC. The manager said he was indifferent to me working from NYC and it was up to the project management committee. I was informed a few days later I was banned from ever applying to Netflix because I rescinded an offer and that showed I was not honest / candid, which is one of their values. This makes no sense as I told the manager there might be issues if I have to move to the bay area because of my girlfriend and that I'd really appreciate being able to work in NYC as the position I applied for advertised. When I accepted the offer I thought I could maybe do this (as would anyone probably convince themselves), but realized it was the wrong decision and was very candid about this the following Monday. \n\nHR was extremely critical throughout the process of everything I did. I get that there’s a culture of being very candid in giving feedback, but this feedback felt very contrived and baseless. Maybe it’s because I’m a white male and Netflix needs more diversity to score popularity points.",
+    "questions": [
+      "They asked for my general point of view on the current planning",
+      "How do you feel about the culture deck ",
+      "Describe process improvements I've driven",
+      "Questions from the Netflix culture doc",
+      "Work experience in similar positions",
+      "Tell us about previous experiences ",
+      "What is your approach to managing multiple projects simultaneously?\n\n",
+      "Sei disposto a trasferirti a Roma?",
+      "basic around leetcode easy level question ",
+      "Why I'm interested, and why I think I'm the perfect candidate that they must hire?",
+      "What stood out to you about our Company Culture page?",
+      "What do you know about their culture",
+      "Describe a process and how you improved it",
+      "HR gives you resources about the company’s ethos and you need to memorize them because they’ll quiz you. ",
+      "Preguntas técnicas que no tenían que ver con el puesto en muchas ocasiones, sobre experiencia, por qué netflix?, preguntas típicas de entrevista",
+      "How do you prioritize tasks?",
+      "Work with some APIs, analyze output, return specific requirements",
+      "What does interview 5 give you than interview 1-4 doesn't? Only Netflix knows",
+      "You are on the product team for Netflix customer support. What would you build?",
+      "How to design a data pipeline for ml recommendations (include details of the model development too)"
+    ],
+    "interviewCount": 20,
+    "hasCompanyInfo": true,
+    "totalInterviews": 20,
+    "questionsFound": 20
   }
 }
