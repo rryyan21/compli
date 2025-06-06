@@ -1,0 +1,16 @@
+{
+  "google": {
+    "employer": "Google",
+    "difficulty": "DIFFICULT",
+    "experience": "POSITIVE",
+    "jobTitle": "Software Engineer",
+    "outcome": "ACCEPT_OFFER",
+    "process": "Direct onsite because I interviewed in the past and did well that time. From the time I sent my resume to interview day: 2 weeks. From interview day to offer over the phone: 2 weeks.\r\n\r\nThe syllabus for the interviews is very clear and simple:\r\n1) Dynamic Programming\r\n2) Super recursion (permutation, combination,...2^n, m^n, n!...etc. type of program. (NP hard, NP programs)\r\n3) Probability related programs\r\n4) Graphs: BFS/DFS are usually enough\r\n5) All basic data structures from Arrays/Lists to circular queues, BSTs, Hash tables, B-Trees, and Red-Black trees, and all basic algorithms like sorting, binary search, median,...\r\n6) Problem solving ability at a level similar to TopCoder Division 1, 250 points. If you can consistently solve these, then you are almost sure to get in with 2-weeks brush up.\r\n7) Review all old interview questions in Glassdoor to get a feel. If you can solve 95% of them at home (including coding them up quickly and testing them out in a debugger + editor setup), you are in good shape.\r\n8) Practice coding--write often and write a lot. If you can think of a solution, you should be able to code it easily...without much thought.\r\n9) Very good to have for design interview: distributed systems knowledge and practical experience. \r\n10) Good understanding of basic discrete math, computer architecture, basic math.\r\n11) Coursera courses and assignments give a lot of what you need to know.\r\n12) Note that all the above except the first 2 are useful in \"real life\" programming too! \r\n\r\nInterview 1:\r\nGraph related question and super recursion\r\n\r\nInterview 2:\r\nDesign discussion involving a distributed system with writes/reads going on at different sites in parallel.\r\n\r\nInterview 3:\r\nArray and Tree related questions\r\n\r\nInterview 4:\r\nDesigning a simple class to do something. Not hard, but not easy either. You need to know basic data structures very well to consider different designs and trade-offs.\r\n\r\nInterview 5:\r\nDynamic programming, \r\nComputer architecture and low level perf. enhancement question which requires knowledge of Trees, binary search, etc.\r\n\r\nAt the end, I wasn't tired and rather enjoyed the discussions. I think the key was long term preparation and time spent doing topcoder for several years (on and off as I enjoy solving the problems). \r\n\r\nConclusion: \"It's not the best who win the race; it's the best prepared who win it.\"",
+    "questions": [
+      "Give as many ways as you can delete a file named \"-f\"",
+      "Comment vendriez-vous notre produit à un certain type de client?",
+      "What type of motor starters do you recommend and why"
+    ],
+    "interviewCount": 10
+  }
+}

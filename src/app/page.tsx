@@ -20,6 +20,8 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
   const [news, setNews] = useState<{ title: string; link: string }[]>([]);
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [interviewData, setInterviewData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"overview" | "news">("overview");
@@ -42,14 +44,23 @@ export default function Home() {
     if (!query) return;
 
     setLoading(true);
+
     const res = await fetch(`/api/search?company=${encodeURIComponent(query)}`);
     const data = await res.json();
     setUrl(data.url);
     setSummary(data.summary);
     setNews(data.news || []);
     setActiveTab("overview");
-    setLoading(false);
     updateHistory(query);
+
+    const qRes = await fetch(
+      `/api/questions?company=${encodeURIComponent(query)}`
+    );
+    const qData = await qRes.json();
+    setQuestions(qData.questions || []);
+    setInterviewData(qData.interviewData || null);
+
+    setLoading(false);
 
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -68,17 +79,16 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-4 text-center bg-black text-[var(--text-primary)]">
-      {/* Logo + Brand Title in Row */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-center gap-0.1 mb-8 -ml-3"
+        className="flex items-center justify-center gap-1 mb-4 -ml-2"
       >
         <img
           src="/CompliIcon.png"
           alt="Compli Icon"
-          className="w-[72px] h-[72px] -mb-1"
+          className="w-[90px] h-[90px] -mb-1"
         />
         <h1 className="text-5xl font-semibold tracking-tight">Compli</h1>
       </motion.div>
@@ -88,6 +98,7 @@ export default function Home() {
         placeholder="Enter a company name"
         value={company}
         onChange={(e) => setCompany(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && searchCompany()}
         className="border px-4 py-2 rounded w-full max-w-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
       />
 
@@ -133,13 +144,12 @@ export default function Home() {
         </div>
       )}
 
-      {/* Result Card */}
+      {/* Results */}
       {url && (
         <div
           ref={resultRef}
           className="mt-16 bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl max-w-xl w-full text-[var(--text-primary)] space-y-6 text-left backdrop-blur-sm"
         >
-          {/* Company Header */}
           <div className="flex items-center gap-4">
             <img
               src={`https://logo.clearbit.com/${new URL(url).hostname}`}
@@ -162,7 +172,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-3">
             <button
               onClick={() => setActiveTab("overview")}
@@ -180,7 +189,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* Tab Content */}
           <AnimatePresence mode="wait">
             {activeTab === "overview" && (
               <motion.div
@@ -189,13 +197,51 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
-                className="space-y-2"
+                className="space-y-4"
               >
                 <h4 className="font-semibold text-base mb-1 flex items-center gap-2">
                   <Info size={16} />
                   <span className="tracking-wide">Mission & Values</span>
                 </h4>
                 <p className="text-base leading-relaxed italic">"{summary}"</p>
+
+                {interviewData && (
+                  <div className="mt-4 space-y-2">
+                    <h4 className="font-semibold text-base">
+                      Interview Experience
+                    </h4>
+                    <p className="text-sm text-white/80">
+                      Experience:{" "}
+                      {interviewData.experience?.toLowerCase() || "N/A"}
+                      <br />
+                      Difficulty:{" "}
+                      {interviewData.difficulty?.toLowerCase() || "N/A"}
+                      <br />
+                      Method:{" "}
+                      {interviewData.source?.replace(/_/g, " ").toLowerCase() ||
+                        "N/A"}
+                    </p>
+                    <p className="text-sm text-white/80 mt-2">
+                      {interviewData.processDescription ||
+                        "No description provided."}
+                    </p>
+
+                    {interviewData.userQuestions?.length > 0 && (
+                      <div className="mt-2">
+                        <h4 className="font-semibold text-base mb-1">
+                          Sample Questions
+                        </h4>
+                        <ul className="list-disc list-inside text-sm text-white/80 space-y-1">
+                          {interviewData.userQuestions.map(
+                            (q: any, i: number) => (
+                              <li key={i}>{q.question}</li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             )}
 
