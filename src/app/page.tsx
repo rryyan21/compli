@@ -615,7 +615,7 @@ export default function Home() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-white/70">No contacts available</p>
+                  <p className="text-sm text-white/70">Contacts Coming Soon!</p>
                 )}
               </motion.div>
             )}
