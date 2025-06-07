@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Briefcase,
   Loader2,
+  Mail,
 } from "lucide-react";
 
 const popularCompanies = [
@@ -79,6 +80,7 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
   const [news, setNews] = useState<{ title: string; link: string }[]>([]);
+  const [linkedins, setLinkedins] = useState<string[]>([]); // Add this state
   const [questions, setQuestions] = useState<string[]>([]);
   const [interviewData, setInterviewData] = useState<InterviewData | null>(
     null
@@ -87,7 +89,7 @@ export default function Home() {
   const [loadingInterviews, setLoadingInterviews] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "news" | "interviews"
+    "overview" | "news" | "interviews" | "contacts"
   >("overview");
   const [isClient, setIsClient] = useState(false);
 
@@ -128,6 +130,7 @@ export default function Home() {
     setUrl("");
     setSummary("");
     setNews([]);
+    setLinkedins([]); // Reset linkedins state
     setQuestions([]);
     setInterviewData(null);
 
@@ -145,6 +148,7 @@ export default function Home() {
       setUrl(data.url);
       setSummary(data.summary);
       setNews(uniqueNews);
+      setLinkedins(data.linkedins || []); // Set linkedins data
       setActiveTab("overview");
       updateHistory(query);
       setLoading(false); // Overview data loaded
@@ -343,6 +347,12 @@ export default function Home() {
               {loadingInterviews && (
                 <Loader2 size={12} className="inline ml-1 animate-spin" />
               )}
+            </button>
+            <button
+              onClick={() => setActiveTab("contacts")}
+              className={tabStyle("contacts")}
+            >
+              <Mail size={14} className="inline mr-1" /> Contacts
             </button>
           </div>
 
@@ -574,6 +584,38 @@ export default function Home() {
                   <div className="text-center py-8">
                     <p className="text-white/70">No interview data available</p>
                   </div>
+                )}
+              </motion.div>
+            )}
+            {activeTab === "contacts" && (
+              <motion.div
+                key="contacts"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-4"
+              >
+                <h4 className="font-semibold text-base mb-2 flex items-center gap-2">
+                  <Mail size={16} /> Contacts
+                </h4>
+                {linkedins.length > 0 ? (
+                  <ul className="space-y-2 text-sm">
+                    {linkedins.map((url, index) => (
+                      <li key={index}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 underline hover:text-blue-300"
+                        >
+                          {url.replace("https://www.linkedin.com/in/", "")}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-white/70">No contacts available</p>
                 )}
               </motion.div>
             )}

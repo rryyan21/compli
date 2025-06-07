@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
 
-// Adds timeout support to fetch
-async function fetchWithTimeout(resource: string, options: any = {}, timeout = 8000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  try {
-    const response = await fetch(resource, { ...options, signal: controller.signal });
-    clearTimeout(id);
-    return response;
-  } catch (err) {
-    console.error("Fetch timeout or error:", err);
-    throw err;
-  }
-}
-
 async function tryPages(baseUrl: string, paths: string[]) {
   for (const path of paths) {
     try {
       const fullUrl = `${baseUrl.replace(/\/$/, "")}${path}`;
-      const res = await fetchWithTimeout(fullUrl, { cache: "no-store" }, 8000);
+      const res = await fetch(fullUrl, { cache: "no-store" });
       if (res.ok) {
         const html = await res.text();
         return { html, url: fullUrl };
@@ -42,27 +28,14 @@ function extractSummary(html: string): string {
 
 async function getNews(company: string): Promise<{ title: string; link: string }[]> {
   try {
-    const res = await fetchWithTimeout(
-      `https://gnews.io/api/v4/search?q=${encodeURIComponent(company)}&lang=en&max=5&token=${process.env.GNEWS_API_KEY}`,
-      {},
-      8000
+    const res = await fetch(
+      `https://gnews.io/api/v4/search?q=${encodeURIComponent(company)}&lang=en&max=5&token=${process.env.GNEWS_API_KEY}`
     );
     const json = await res.json();
-    const articles: { title: string; link: string }[] = json.articles?.map((a: any) => ({
+    return json.articles?.map((a: any) => ({
       title: a.title,
       link: a.url,
     })) ?? [];
-
-    // ✅ Deduplicate articles by title (case-insensitive)
-    const seen = new Set<string>();
-    const uniqueArticles = articles.filter((article: { title: string; link: string }) => {
-      const key = article.title.trim().toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    return uniqueArticles;
   } catch (err) {
     console.error("News fetch failed:", err);
     return [];
@@ -78,13 +51,7 @@ export async function GET(req: Request) {
   }
 
   const baseUrl = `https://${company.toLowerCase().replace(/\s+/g, "")}.com`;
-  let result = null;
-
-  try {
-    result = await tryPages(baseUrl, ["/", "/about", "/en", "/home", "/index.html"]);
-  } catch (err) {
-    console.error("Page fetch completely failed:", err);
-  }
+  const result = await tryPages(baseUrl, ["/", "/about", "/en", "/home", "/index.html"]);
 
   const news = await getNews(company); // ✅ always fetch news
 
