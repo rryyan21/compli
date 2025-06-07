@@ -108,7 +108,11 @@ export default function Home() {
   }, []);
 
   const updateHistory = (name: string) => {
-    const updated = [name, ...history.filter((h) => h !== name)].slice(0, 8);
+    const normalized = name.toLowerCase(); // or use .trim().toLowerCase() for extra safety
+    const updated = [
+      normalized,
+      ...history.filter((h) => h.toLowerCase() !== normalized),
+    ].slice(0, 8);
     setHistory(updated);
     safeLocalStorage.setItem("searchHistory", JSON.stringify(updated));
   };
@@ -133,9 +137,14 @@ export default function Home() {
         `/api/search?company=${encodeURIComponent(query)}`
       );
       const data = await res.json();
+      // Remove duplicates based on title
+      const uniqueNews = (data.news || []).filter(
+        (item: { title: string; link: string }, index: number, self: any[]) =>
+          index === self.findIndex((t) => t.title === item.title)
+      );
       setUrl(data.url);
       setSummary(data.summary);
-      setNews(data.news || []);
+      setNews(uniqueNews);
       setActiveTab("overview");
       updateHistory(query);
       setLoading(false); // Overview data loaded
