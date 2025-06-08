@@ -1,0 +1,19 @@
+{
+    "amazon": {
+      "profiles": [
+        {
+          "name": "Jane Doe",
+          "link": "https://linkedin.com/in/janedoe",
+          "description": "Senior Software Engineer at Amazon",
+          "position": "Senior Software Engineer"
+        },
+        {
+          "name": "John Smith",
+          "link": "https://linkedin.com/in/johnsmith",
+          "description": "Product Manager at Amazon",
+          "position": "Product Manager"
+        }
+      ],
+      "timestamp": 1718000000000
+    }
+  }
