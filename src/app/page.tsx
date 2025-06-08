@@ -337,11 +337,12 @@ export default function Home() {
           {popularCompanies.map((name) => (
             <button
               key={name}
-              onClick={() => searchCompany(name)}
+              onClick={() => {
+                setCompany(name);
+                searchCompany(name);
+              }}
               disabled={loading}
-              className={`${buttonStyle} ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`${buttonStyle} ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {name}
             </button>
@@ -357,11 +358,12 @@ export default function Home() {
             {history.map((name) => (
               <button
                 key={name}
-                onClick={() => searchCompany(name)}
+                onClick={() => {
+                  setCompany(name);
+                  searchCompany(name);
+                }}
                 disabled={loading}
-                className={`${buttonStyle} ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`${buttonStyle} ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {name}
               </button>
@@ -516,7 +518,7 @@ export default function Home() {
                   ))
                 ) : (
                   <div className="text-center py-8 text-[var(--text-secondary)] italic">
-                    No news yet... more news coming soon!
+                    The algorithm's on a coffee break. Stay tuned for updates!
                   </div>
                 )}
               </motion.div>
