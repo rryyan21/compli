@@ -81,6 +81,16 @@ const safeLocalStorage = {
   },
 };
 
+// Add debounce utility
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
 export default function Home() {
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState("");
@@ -100,8 +110,13 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [googleResults, setGoogleResults] = useState<GoogleSearchResult[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
+  const [university, setUniversity] = useState("");
+  const [universityResults, setUniversityResults] = useState<GoogleSearchResult[]>([]);
+  const [loadingUniversity, setLoadingUniversity] = useState(false);
+  const [searchCache, setSearchCache] = useState<Record<string, GoogleSearchResult[]>>({});
 
   const resultRef = useRef<HTMLDivElement>(null);
+  const debouncedUniversity = useDebounce(university, 500);
 
   // Handle client-side hydration
   useEffect(() => {
@@ -190,6 +205,44 @@ export default function Home() {
     }
   };
 
+  // Live search as user types university
+  useEffect(() => {
+    if (!debouncedUniversity) {
+      setUniversityResults([]);
+      setLoadingUniversity(false);
+      return;
+    }
+    if (!company) return;
+    const cacheKey = `${company}-${debouncedUniversity}`;
+    if (searchCache[cacheKey]) {
+      setUniversityResults(searchCache[cacheKey]);
+      setLoadingUniversity(false);
+      return;
+    }
+    setLoadingUniversity(true);
+    fetch(`/api/university-search?company=${encodeURIComponent(company)}&university=${encodeURIComponent(debouncedUniversity)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results) {
+          setUniversityResults(data.results);
+          setSearchCache(prev => ({ ...prev, [cacheKey]: data.results }));
+        } else {
+          setUniversityResults([]);
+        }
+      })
+      .catch(err => {
+        setUniversityResults([]);
+      })
+      .finally(() => setLoadingUniversity(false));
+  }, [debouncedUniversity, company]);
+
+  // Only clear university search state when company changes
+  useEffect(() => {
+    setUniversityResults([]);
+    setSearchCache({});
+    setUniversity("");
+  }, [company]);
+
   const buttonStyle =
     "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] text-sm px-4 py-1 rounded-full transition";
 
@@ -199,13 +252,6 @@ export default function Home() {
         ? "bg-[var(--accent)] text-[var(--text-primary)]"
         : "bg-white/10 text-[var(--text-primary)] hover:bg-white/20"
     }`;
-
-  useEffect(() => {
-    if (activeTab === "contacts" && company) {
-      searchCompany(company);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
 
   const renderContacts = () => {
     if (loadingContacts) {
@@ -393,15 +439,13 @@ export default function Home() {
               <Info size={14} className="inline mr-1" />
               Overview
             </button>
-            {news.length > 0 && (
-              <button
-                onClick={() => setActiveTab("news")}
-                className={tabStyle("news")}
-              >
-                <Newspaper size={14} className="inline mr-1" />
-                News
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab("news")}
+              className={tabStyle("news")}
+            >
+              <Newspaper size={14} className="inline mr-1" />
+              News
+            </button>
             <button
               onClick={() => setActiveTab("interviews")}
               className={`${tabStyle("interviews")} ${
@@ -440,7 +484,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "news" && news.length > 0 && (
+            {activeTab === "news" && (
               <motion.div
                 key="news"
                 initial={{ opacity: 0, y: 10 }}
@@ -453,22 +497,28 @@ export default function Home() {
                   <Newspaper size={16} />
                   <span className="tracking-wide">Recent News</span>
                 </h4>
-                {news.map((item, index) => (
-                  <motion.a
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block bg-white/5 border border-white/10 hover:border-[var(--accent)] hover:bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl transition text-left"
-                  >
-                    <p className="text-sm font-medium leading-snug">
-                      {item.title}
-                    </p>
-                  </motion.a>
-                ))}
+                {news.length > 0 ? (
+                  news.map((item, index) => (
+                    <motion.a
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block bg-white/5 border border-white/10 hover:border-[var(--accent)] hover:bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl transition text-left"
+                    >
+                      <p className="text-sm font-medium leading-snug">
+                        {item.title}
+                      </p>
+                    </motion.a>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-[var(--text-secondary)] italic">
+                    No news yet... more news coming soon!
+                  </div>
+                )}
               </motion.div>
             )}
 
