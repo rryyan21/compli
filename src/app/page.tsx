@@ -37,6 +37,12 @@ interface InterviewData {
   error?: string;
 }
 
+interface GoogleSearchResult {
+  title: string;
+  link: string;
+  snippet: string;
+}
+
 // Loading skeleton components
 const SkeletonLine = ({ width = "100%" }: { width?: string }) => (
   <div className="h-4 bg-white/10 rounded animate-pulse" style={{ width }} />
@@ -80,7 +86,7 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
   const [news, setNews] = useState<{ title: string; link: string }[]>([]);
-  const [linkedins, setLinkedins] = useState<string[]>([]); // Add this state
+  const [linkedins, setLinkedins] = useState<string[]>([]);
   const [questions, setQuestions] = useState<string[]>([]);
   const [interviewData, setInterviewData] = useState<InterviewData | null>(
     null
@@ -92,6 +98,8 @@ export default function Home() {
     "overview" | "news" | "interviews" | "contacts"
   >("overview");
   const [isClient, setIsClient] = useState(false);
+  const [googleResults, setGoogleResults] = useState<GoogleSearchResult[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
 
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -125,14 +133,16 @@ export default function Home() {
 
     setLoading(true);
     setLoadingInterviews(true);
+    setLoadingContacts(true);
 
     // Reset previous data
     setUrl("");
     setSummary("");
     setNews([]);
-    setLinkedins([]); // Reset linkedins state
+    setLinkedins([]);
     setQuestions([]);
     setInterviewData(null);
+    setGoogleResults([]);
 
     try {
       // Fetch company overview and website
@@ -140,7 +150,6 @@ export default function Home() {
         `/api/search?company=${encodeURIComponent(query)}`
       );
       const data = await res.json();
-      // Remove duplicates based on title
       const uniqueNews = (data.news || []).filter(
         (item: { title: string; link: string }, index: number, self: any[]) =>
           index === self.findIndex((t) => t.title === item.title)
@@ -148,25 +157,32 @@ export default function Home() {
       setUrl(data.url);
       setSummary(data.summary);
       setNews(uniqueNews);
-      setLinkedins(data.linkedins || []); // Set linkedins data
+      setLinkedins(data.linkedins || []);
       setActiveTab("overview");
       updateHistory(query);
-      setLoading(false); // Overview data loaded
+      setLoading(false);
 
-      // Fetch interview data (continues loading)
+      // Fetch interview data
       const qRes = await fetch(
         `/api/questions?company=${encodeURIComponent(query)}`
       );
       const qData = await qRes.json();
-
-      // Set the interview data from the API response
       setInterviewData(qData);
       setQuestions(qData.questions || []);
-      setLoadingInterviews(false); // Interview data loaded
+      setLoadingInterviews(false);
+
+      // Fetch Google search results for contacts (no role)
+      const googleRes = await fetch(
+        `/api/google-search?company=${encodeURIComponent(query)}`
+      );
+      const googleData = await googleRes.json();
+      setGoogleResults(googleData.results || []);
+      setLoadingContacts(false);
     } catch (error) {
       console.error("Error fetching company data:", error);
       setLoading(false);
       setLoadingInterviews(false);
+      setLoadingContacts(false);
     } finally {
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -183,6 +199,56 @@ export default function Home() {
         ? "bg-[var(--accent)] text-[var(--text-primary)]"
         : "bg-white/10 text-[var(--text-primary)] hover:bg-white/20"
     }`;
+
+  useEffect(() => {
+    if (activeTab === "contacts" && company) {
+      searchCompany(company);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const renderContacts = () => {
+    if (loadingContacts) {
+      return (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      );
+    }
+    if (googleResults.length === 0) {
+      return (
+        <div className="text-center py-8 text-[var(--text-secondary)]">
+          No contacts found for this company.
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-4">
+        {googleResults.map((result, index) => (
+          <div
+            key={index}
+            className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition"
+          >
+            <a
+              href={result.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <h3 className="text-lg font-medium mb-2 hover:text-[var(--accent)] transition">
+                {result.title}
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {result.snippet}
+              </p>
+            </a>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-4 text-center bg-black text-[var(--text-primary)]">
@@ -588,36 +654,10 @@ export default function Home() {
               </motion.div>
             )}
             {activeTab === "contacts" && (
-              <motion.div
-                key="contacts"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-4"
-              >
-                <h4 className="font-semibold text-base mb-2 flex items-center gap-2">
-                  <Mail size={16} /> Contacts
-                </h4>
-                {linkedins.length > 0 ? (
-                  <ul className="space-y-2 text-sm">
-                    {linkedins.map((url, index) => (
-                      <li key={index}>
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 underline hover:text-blue-300"
-                        >
-                          {url.replace("https://www.linkedin.com/in/", "")}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-white/70">Contacts Coming Soon!</p>
-                )}
-              </motion.div>
+              <div className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">People at {company}</h2>
+                {renderContacts()}
+              </div>
             )}
           </AnimatePresence>
         </motion.div>
