@@ -35,40 +35,14 @@ async function tryPages(baseUrl: string, paths: string[]) {
   return null;
 }
 
-function extractMetaDescription(html: string): string | null {
-  // Try to extract <meta name="description"> or <meta property="og:description">
-  const metaDescMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i);
-  if (metaDescMatch && metaDescMatch[1]) return metaDescMatch[1];
-  const ogDescMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["'][^>]*>/i);
-  if (ogDescMatch && ogDescMatch[1]) return ogDescMatch[1];
-  return null;
-}
-
-async function fetchWikipediaSummary(company: string): Promise<string | null> {
-  try {
-    const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(company)}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.extract && typeof data.extract === "string" && data.extract.length > 40) {
-      return data.extract;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 function extractSummary(html: string): string {
-  // Try meta description first
-  const meta = extractMetaDescription(html);
-  if (meta) return meta;
-  // Fallback to first <p>
   const cleanText = html
     .replace(/\s+/g, " ")
     .match(/<p[^>]*>(.*?)<\/p>/gi)
     ?.map((p) => p.replace(/<[^>]+>/g, "").trim())
     .filter((p) => p.length > 40 && p.length < 300) ?? [];
-  return cleanText[0] || "";
+
+  return cleanText[0] || "No values summary found.";
 }
 
 async function getNews(company: string): Promise<{ title: string; link: string }[]> {
@@ -182,28 +156,18 @@ export async function GET(req: Request) {
     fetchLinkedInProfiles(company)
   ]);
 
-  let summary = "";
-  if (result) {
-    summary = extractSummary(result.html);
-  }
-  // If no summary found, try Wikipedia
-  if (!summary || summary === "No values summary found.") {
-    const wiki = await fetchWikipediaSummary(company);
-    if (wiki) summary = wiki;
-  }
-  if (!summary) summary = "No values summary found.";
-
   if (!result) {
     console.log("No homepage found for:", company);
     const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(company)}+official+site`;
     return NextResponse.json({
       url: fallbackUrl,
-      summary,
+      summary: "No values summary found.",
       news,
       contacts: linkedInProfiles,
     });
   }
 
+  const summary = extractSummary(result.html);
   console.log("News results:", news.length, "LinkedIn profiles:", linkedInProfiles.length);
 
   return NextResponse.json({
