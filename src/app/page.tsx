@@ -100,7 +100,6 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [googleResults, setGoogleResults] = useState<GoogleSearchResult[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
-  const [university, setUniversity] = useState("");
 
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -128,9 +127,8 @@ export default function Home() {
     safeLocalStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
-  const searchCompany = async (input?: string, universityOverride?: string) => {
+  const searchCompany = async (input?: string) => {
     const query = input || company;
-    const universityQuery = universityOverride !== undefined ? universityOverride : university;
     if (!query) return;
 
     setLoading(true);
@@ -173,9 +171,9 @@ export default function Home() {
       setQuestions(qData.questions || []);
       setLoadingInterviews(false);
 
-      // Fetch Google search results for contacts (with university if provided)
+      // Fetch Google search results for contacts (no role)
       const googleRes = await fetch(
-        `/api/google-search?company=${encodeURIComponent(query)}${universityQuery ? `&university=${encodeURIComponent(universityQuery)}` : ""}`
+        `/api/google-search?company=${encodeURIComponent(query)}`
       );
       const googleData = await googleRes.json();
       setGoogleResults(googleData.results || []);
@@ -202,75 +200,53 @@ export default function Home() {
         : "bg-white/10 text-[var(--text-primary)] hover:bg-white/20"
     }`;
 
-  // Debounced search for university filter
   useEffect(() => {
-    if (!company) return;
-    setLoadingContacts(true);
-    const handler = setTimeout(() => {
-      fetch(`/api/google-search?company=${encodeURIComponent(company)}${university ? `&university=${encodeURIComponent(university)}` : ""}`)
-        .then(res => res.json())
-        .then(data => {
-          setGoogleResults(data.results || []);
-          setLoadingContacts(false);
-        });
-    }, 500); // 500ms debounce
-    return () => clearTimeout(handler);
-  }, [university, company]);
-
-  const handleUniversityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUniversity(e.target.value);
-  };
+    if (activeTab === "contacts" && company) {
+      searchCompany(company);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const renderContacts = () => {
-    return (
-      <>
-        <div className="mb-4 flex flex-col sm:flex-row items-center gap-2 justify-start">
-          <label htmlFor="university-filter" className="text-sm font-medium mr-2">Filter by University/College (optional):</label>
-          <input
-            id="university-filter"
-            type="text"
-            className="bg-black border border-white/20 rounded px-3 py-1 text-sm text-[var(--text-primary)]"
-            placeholder="e.g. Stanford University"
-            value={university}
-            onChange={handleUniversityChange}
-            style={{ minWidth: 220 }}
-          />
+    if (loadingContacts) {
+      return (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
-        {loadingContacts ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+      );
+    }
+    if (googleResults.length === 0) {
+      return (
+        <div className="text-center py-8 text-[var(--text-secondary)]">
+          No contacts found for this company.
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-4">
+        {googleResults.map((result, index) => (
+          <div
+            key={index}
+            className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition"
+          >
+            <a
+              href={result.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <h3 className="text-lg font-medium mb-2 hover:text-[var(--accent)] transition">
+                {result.title}
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {result.snippet}
+              </p>
+            </a>
           </div>
-        ) : googleResults.length === 0 ? (
-          <div className="text-center py-8 text-[var(--text-secondary)]">
-            No contacts found for this company.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {googleResults.map((result, index) => (
-              <div
-                key={index}
-                className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition"
-              >
-                <a
-                  href={result.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <h3 className="text-lg font-medium mb-2 hover:text-[var(--accent)] transition">
-                    {result.title}
-                  </h3>
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    {result.snippet}
-                  </p>
-                </a>
-              </div>
-            ))}
-          </div>
-        )}
-      </>
+        ))}
+      </div>
     );
   };
 
