@@ -141,6 +141,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing company" }, { status: 400 });
   }
 
+  // Special case for Tesla: always use https://www.tesla.com/
+  if (company.trim().toLowerCase() === "tesla") {
+    // Fetch news and LinkedIn profiles in parallel
+    const [news, linkedInProfiles] = await Promise.all([
+      getNews(company),
+      fetchLinkedInProfiles(company)
+    ]);
+    return NextResponse.json({
+      url: "https://www.tesla.com/",
+      summary: "No values summary found.",
+      news,
+      contacts: linkedInProfiles,
+    });
+  }
+
   const baseUrl = `https://${company.toLowerCase().replace(/\s+/g, "")}.com`;
   let result = null;
 
@@ -156,7 +171,8 @@ export async function GET(req: Request) {
     fetchLinkedInProfiles(company)
   ]);
 
-  if (!result) {
+  // Robust fallback: if homepage fetch fails, still return news and contacts with a Google search link
+  if (!result || !result.url) {
     console.log("No homepage found for:", company);
     const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(company)}+official+site`;
     return NextResponse.json({
