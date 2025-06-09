@@ -37,6 +37,28 @@ interface InterviewData {
   error?: string;
 }
 
+interface ChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+interface CompanyNotes {
+  notes: string;
+  questions: string;
+  saved: boolean;
+}
+
+interface PrepDay {
+  title: string;
+  tasks: string[];
+  resources?: string[];
+}
+
+interface PrepPlan {
+  [key: string]: PrepDay;
+}
+
 interface GoogleSearchResult {
   title: string;
   link: string;
@@ -91,6 +113,138 @@ function useDebounce(value: string, delay: number) {
   return debouncedValue;
 }
 
+// Predefined prep plans for different roles
+const prepPlans: Record<string, PrepPlan> = {
+  "Software Engineer": {
+    "Day 1: Technical Fundamentals": {
+      title: "Data Structures & Algorithms",
+      tasks: [
+        "Review core data structures (Arrays, Linked Lists, Trees, Graphs)",
+        "Practice basic algorithms (Sorting, Searching, BFS/DFS)",
+        "Solve 2-3 LeetCode easy/medium problems"
+      ],
+      resources: [
+        "https://leetcode.com/problemset/all/",
+        "https://www.geeksforgeeks.org/data-structures/"
+      ]
+    },
+    "Day 2: System Design": {
+      title: "System Design Basics",
+      tasks: [
+        "Study system design fundamentals",
+        "Practice designing a simple system (e.g., URL shortener)",
+        "Review scalability concepts"
+      ],
+      resources: [
+        "https://github.com/donnemartin/system-design-primer",
+        "https://www.educative.io/courses/grokking-the-system-design-interview"
+      ]
+    },
+    "Day 3: Coding Practice": {
+      title: "Advanced Problem Solving",
+      tasks: [
+        "Focus on dynamic programming problems",
+        "Practice tree/graph algorithms",
+        "Review time/space complexity analysis"
+      ]
+    },
+    "Day 4: System Architecture": {
+      title: "Distributed Systems",
+      tasks: [
+        "Study distributed systems concepts",
+        "Review database design patterns",
+        "Practice system design questions"
+      ]
+    },
+    "Day 5: Behavioral Prep": {
+      title: "Behavioral & Leadership",
+      tasks: [
+        "Prepare STAR format responses",
+        "Practice leadership questions",
+        "Review past projects for examples"
+      ]
+    },
+    "Day 6: Mock Interviews": {
+      title: "Practice Interviews",
+      tasks: [
+        "Schedule mock technical interviews",
+        "Practice coding on a whiteboard",
+        "Record and review your performance"
+      ]
+    },
+    "Day 7: Final Review": {
+      title: "Comprehensive Review",
+      tasks: [
+        "Review all technical concepts",
+        "Practice time management",
+        "Prepare questions for interviewers"
+      ]
+    }
+  },
+  "Product Manager": {
+    "Day 1: Product Fundamentals": {
+      title: "Core Product Concepts",
+      tasks: [
+        "Review product development lifecycle",
+        "Study product metrics and KPIs",
+        "Practice product sense questions"
+      ],
+      resources: [
+        "https://www.productplan.com/learn/product-management-basics/",
+        "https://www.mindtheproduct.com/"
+      ]
+    },
+    "Day 2: Strategy & Vision": {
+      title: "Product Strategy",
+      tasks: [
+        "Practice product strategy questions",
+        "Study market analysis frameworks",
+        "Review competitive analysis techniques"
+      ]
+    },
+    "Day 3: User Research": {
+      title: "User-Centric Design",
+      tasks: [
+        "Study user research methodologies",
+        "Practice user interview questions",
+        "Review user feedback analysis"
+      ]
+    },
+    "Day 4: Technical Understanding": {
+      title: "Technical Knowledge",
+      tasks: [
+        "Review basic technical concepts",
+        "Study system architecture basics",
+        "Practice technical PM questions"
+      ]
+    },
+    "Day 5: Execution & Leadership": {
+      title: "Execution Excellence",
+      tasks: [
+        "Study agile methodologies",
+        "Practice prioritization frameworks",
+        "Review stakeholder management"
+      ]
+    },
+    "Day 6: Analytics & Metrics": {
+      title: "Data-Driven Decisions",
+      tasks: [
+        "Study product analytics tools",
+        "Practice metrics-based questions",
+        "Review A/B testing concepts"
+      ]
+    },
+    "Day 7: Final Preparation": {
+      title: "Comprehensive Review",
+      tasks: [
+        "Review all product concepts",
+        "Practice case studies",
+        "Prepare questions for interviewers"
+      ]
+    }
+  }
+};
+
 export default function Home() {
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState("");
@@ -105,7 +259,7 @@ export default function Home() {
   const [loadingInterviews, setLoadingInterviews] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "news" | "interviews" | "contacts"
+    "overview" | "news" | "interviews" | "contacts" | "prep"
   >("overview");
   const [isClient, setIsClient] = useState(false);
   const [googleResults, setGoogleResults] = useState<GoogleSearchResult[]>([]);
@@ -114,6 +268,13 @@ export default function Home() {
   const [universityResults, setUniversityResults] = useState<GoogleSearchResult[]>([]);
   const [loadingUniversity, setLoadingUniversity] = useState(false);
   const [searchCache, setSearchCache] = useState<Record<string, GoogleSearchResult[]>>({});
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [companyNotes, setCompanyNotes] = useState<CompanyNotes>({
+    notes: "",
+    questions: "",
+    saved: false
+  });
+  const [selectedRole, setSelectedRole] = useState<string>("Software Engineer");
 
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
@@ -243,6 +404,85 @@ export default function Home() {
     setUniversity("");
   }, [company]);
 
+  // Load checklist from localStorage when company changes
+  useEffect(() => {
+    if (company) {
+      const stored = safeLocalStorage.getItem(`checklist-${company}`);
+      if (stored) {
+        try {
+          setChecklist(JSON.parse(stored));
+        } catch {
+          // If parsing fails, initialize with default items
+          setChecklist([
+            { id: "resume", label: "Resume tailored", done: false },
+            { id: "mock", label: "Mock interview completed", done: false },
+            { id: "referral", label: "Reached out to alumni/referral", done: false },
+          ]);
+        }
+      } else {
+        // Initialize with default items
+        setChecklist([
+          { id: "resume", label: "Resume tailored", done: false },
+          { id: "mock", label: "Mock interview completed", done: false },
+          { id: "referral", label: "Reached out to alumni/referral", done: false },
+        ]);
+      }
+    }
+  }, [company]);
+
+  // Save checklist to localStorage when it changes
+  useEffect(() => {
+    if (company && checklist.length > 0) {
+      safeLocalStorage.setItem(`checklist-${company}`, JSON.stringify(checklist));
+    }
+  }, [checklist, company]);
+
+  // Load notes from localStorage when company changes
+  useEffect(() => {
+    if (company) {
+      const stored = safeLocalStorage.getItem(`notes-${company}`);
+      if (stored) {
+        try {
+          setCompanyNotes(JSON.parse(stored));
+        } catch {
+          // If parsing fails, initialize with empty notes
+          setCompanyNotes({ notes: "", questions: "", saved: false });
+        }
+      } else {
+        setCompanyNotes({ notes: "", questions: "", saved: false });
+      }
+    }
+  }, [company]);
+
+  // Save notes to localStorage when they change
+  useEffect(() => {
+    if (company) {
+      safeLocalStorage.setItem(`notes-${company}`, JSON.stringify(companyNotes));
+    }
+  }, [companyNotes, company]);
+
+  const updateNotes = (field: keyof Omit<CompanyNotes, 'saved'>, value: string) => {
+    setCompanyNotes(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const toggleSaveCompany = () => {
+    setCompanyNotes(prev => ({
+      ...prev,
+      saved: !prev.saved
+    }));
+  };
+
+  const toggleChecklistItem = (id: string) => {
+    setChecklist(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, done: !item.done } : item
+      )
+    );
+  };
+
   const buttonStyle =
     "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] text-sm px-4 py-1 rounded-full transition";
 
@@ -292,6 +532,122 @@ export default function Home() {
             </a>
           </div>
         ))}
+      </div>
+    );
+  };
+
+  const renderPrep = () => {
+    if (!company) {
+      return (
+        <div className="text-center text-white/60 py-8">
+          Search for a company to see preparation checklist
+        </div>
+      );
+    }
+
+    const currentPlan = prepPlans[selectedRole];
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Ready to Apply Checklist</h3>
+            <button
+              onClick={toggleSaveCompany}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+                companyNotes.saved
+                  ? "bg-blue-500 text-white"
+                  : "bg-white/10 text-white/60 hover:bg-white/20"
+              }`}
+            >
+              {companyNotes.saved ? "Saved" : "Save Company"}
+            </button>
+          </div>
+          <div className="space-y-3">
+            {checklist.map(item => (
+              <div key={item.id} className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={item.done}
+                  onChange={() => toggleChecklistItem(item.id)}
+                  className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-blue-500"
+                />
+                <span className={item.done ? "line-through text-white/40" : ""}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4">Prep Notes</h3>
+            <textarea
+              value={companyNotes.notes}
+              onChange={(e) => updateNotes("notes", e.target.value)}
+              placeholder="Add your preparation notes here..."
+              className="w-full h-40 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4">Questions to Ask</h3>
+            <textarea
+              value={companyNotes.questions}
+              onChange={(e) => updateNotes("questions", e.target.value)}
+              placeholder="List questions you want to ask during interviews..."
+              className="w-full h-40 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-semibold">7-Day Prep Plan</h3>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white focus:outline-none focus:border-blue-500"
+            >
+              {Object.keys(prepPlans).map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-4">
+            {Object.entries(currentPlan).map(([day, content]) => (
+              <div key={day} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                <h4 className="font-medium text-blue-400 mb-2">{day}</h4>
+                <h5 className="font-medium mb-2">{content.title}</h5>
+                <ul className="list-disc list-inside space-y-1 text-white/80">
+                  {content.tasks.map((task, index) => (
+                    <li key={index}>{task}</li>
+                  ))}
+                </ul>
+                {content.resources && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <h6 className="text-sm font-medium text-white/60 mb-2">Resources:</h6>
+                    <ul className="space-y-1">
+                      {content.resources.map((resource, index) => (
+                        <li key={index}>
+                          <a
+                            href={resource}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-sm"
+                          >
+                            {resource}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -465,6 +821,12 @@ export default function Home() {
               className={tabStyle("contacts")}
             >
               <Mail size={14} className="inline mr-1" /> Contacts
+            </button>
+            <button
+              onClick={() => setActiveTab("prep")}
+              className={tabStyle("prep")}
+            >
+              Prep
             </button>
           </div>
 
@@ -711,6 +1073,7 @@ export default function Home() {
                 {renderContacts()}
               </div>
             )}
+            {activeTab === "prep" && renderPrep()}
           </AnimatePresence>
         </motion.div>
       )}
