@@ -11,6 +11,7 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const popularCompanies = [
   "Google",
@@ -246,6 +247,7 @@ const prepPlans: Record<string, PrepPlan> = {
 };
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
@@ -654,6 +656,34 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-4 text-center bg-black text-[var(--text-primary)]">
+      {/* Login/Logout Button */}
+      <div className="absolute top-6 right-8 z-50">
+        {status === "loading" ? null : session ? (
+          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full shadow-lg transition-all">
+            <img
+              src={session.user?.image || "/default-avatar.png"}
+              alt="avatar"
+              className="w-8 h-8 rounded-full border-2 border-white/30 shadow"
+              style={{ objectFit: 'cover' }}
+            />
+            <span className="text-sm font-medium text-white/90 truncate max-w-[120px]">{session.user?.name}</span>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="ml-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-1.5 rounded-full font-semibold text-sm shadow-md transition-all border border-white/20"
+            >
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+            className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-2 rounded-full shadow-lg text-white font-semibold text-sm hover:bg-white/20 transition-all"
+          >
+            <img src="/google.svg" alt="Google logo" className="w-5 h-5" />
+            Sign in with Google
+          </button>
+        )}
+      </div>
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
