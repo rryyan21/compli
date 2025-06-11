@@ -835,7 +835,7 @@ export default function Home() {
               News
             </button>
             <button
-              onClick={() => setActiveTab("interviews")}
+              onClick={() => session ? setActiveTab("interviews") : setActiveTab("interviews")}
               className={`${tabStyle("interviews")} ${
                 loadingInterviews ? "opacity-70" : ""
               }`}
@@ -847,13 +847,13 @@ export default function Home() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab("contacts")}
+              onClick={() => session ? setActiveTab("contacts") : setActiveTab("contacts")}
               className={tabStyle("contacts")}
             >
               <Mail size={14} className="inline mr-1" /> Contacts
             </button>
             <button
-              onClick={() => setActiveTab("prep")}
+              onClick={() => session ? setActiveTab("prep") : setActiveTab("prep")}
               className={tabStyle("prep")}
             >
               Prep
@@ -916,7 +916,29 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "interviews" && (
+            {activeTab === "interviews" && !session && (
+              <motion.div
+                key="interviews-locked"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="text-center py-8"
+              >
+                <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
+                  <p className="text-white/60 mb-4">Please sign in to view interview insights</p>
+                  <button
+                    onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
+                  >
+                    <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
+                    Sign in
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "interviews" && session && (
               <motion.div
                 key="interviews"
                 initial={{ opacity: 0, y: 10 }}
@@ -1097,13 +1119,59 @@ export default function Home() {
                 )}
               </motion.div>
             )}
-            {activeTab === "contacts" && (
+
+            {activeTab === "contacts" && !session && (
+              <motion.div
+                key="contacts-locked"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="text-center py-8"
+              >
+                <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
+                  <p className="text-white/60 mb-4">Please sign in to view contact information</p>
+                  <button
+                    onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
+                  >
+                    <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
+                    Sign in
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "contacts" && session && (
               <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">People at {company}</h2>
                 {renderContacts()}
               </div>
             )}
-            {activeTab === "prep" && renderPrep()}
+
+            {activeTab === "prep" && !session && (
+              <motion.div
+                key="prep-locked"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="text-center py-8"
+              >
+                <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
+                  <p className="text-white/60 mb-4">Please sign in to access preparation materials</p>
+                  <button
+                    onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
+                  >
+                    <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
+                    Sign in
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "prep" && session && renderPrep()}
           </AnimatePresence>
         </motion.div>
       )}
