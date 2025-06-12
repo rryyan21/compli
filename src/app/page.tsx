@@ -11,7 +11,10 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { auth, provider, db } from "@/lib/firebase";
+import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from "firebase/auth";
+import { collection, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 const popularCompanies = [
   "Google",
@@ -247,17 +250,16 @@ const prepPlans: Record<string, PrepPlan> = {
 };
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
   const [news, setNews] = useState<{ title: string; link: string }[]>([]);
   const [linkedins, setLinkedins] = useState<string[]>([]);
   const [questions, setQuestions] = useState<string[]>([]);
-  const [interviewData, setInterviewData] = useState<InterviewData | null>(
-    null
-  );
-  const [loading, setLoading] = useState(false);
+  const [interviewData, setInterviewData] = useState<InterviewData | null>(null);
   const [loadingInterviews, setLoadingInterviews] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<
@@ -280,6 +282,39 @@ export default function Home() {
 
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
+
+  // Handle auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Track user sign in (only one record per user, updated on each sign-in)
+  useEffect(() => {
+    if (user) {
+      const logUserSignIn = async () => {
+        try {
+          await setDoc(
+            doc(db, "userSignIns", user.uid), // Use UID as doc ID
+            {
+              email: user.email,
+              name: user.displayName,
+              image: user.photoURL,
+              timestamp: serverTimestamp(),
+            },
+            { merge: true }
+          );
+          console.log("✅ Firestore log successful");
+        } catch (err) {
+          console.error("❌ Firestore log failed:", err);
+        }
+      };
+      logUserSignIn();
+    }
+  }, [user]);
 
   // Handle client-side hydration
   useEffect(() => {
@@ -654,21 +689,50 @@ export default function Home() {
     );
   };
 
+  const handleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      // No redirect, just let the UI update
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-4 text-center bg-black text-[var(--text-primary)]">
       {/* Login/Logout Button */}
       <div className="absolute top-6 right-8 z-50">
-        {status === "loading" ? null : session ? (
+        {user ? (
           <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full shadow-lg transition-all">
             <img
-              src={session.user?.image || "/default-avatar.png"}
+              src={user.photoURL || "/default-avatar.png"}
               alt="avatar"
               className="w-8 h-8 rounded-full border-2 border-white/30 shadow"
               style={{ objectFit: 'cover' }}
             />
-            <span className="text-sm font-medium text-white/90 truncate max-w-[120px]">{session.user?.name}</span>
+            <span className="text-sm font-medium text-white/90 truncate max-w-[120px]">{user.displayName}</span>
             <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={handleSignOut}
               className="ml-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-1.5 rounded-full font-semibold text-sm shadow-md transition-all border border-white/20"
             >
               Sign out
@@ -676,7 +740,7 @@ export default function Home() {
           </div>
         ) : (
           <button
-            onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+            onClick={handleSignIn}
             className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-2 rounded-full shadow-lg text-white font-semibold text-sm hover:bg-white/20 transition-all"
           >
             <img src="/google.svg" alt="Google logo" className="w-5 h-5" />
@@ -835,7 +899,7 @@ export default function Home() {
               News
             </button>
             <button
-              onClick={() => session ? setActiveTab("interviews") : setActiveTab("interviews")}
+              onClick={() => user ? setActiveTab("interviews") : setActiveTab("interviews")}
               className={`${tabStyle("interviews")} ${
                 loadingInterviews ? "opacity-70" : ""
               }`}
@@ -847,13 +911,13 @@ export default function Home() {
               )}
             </button>
             <button
-              onClick={() => session ? setActiveTab("contacts") : setActiveTab("contacts")}
+              onClick={() => user ? setActiveTab("contacts") : setActiveTab("contacts")}
               className={tabStyle("contacts")}
             >
               <Mail size={14} className="inline mr-1" /> Contacts
             </button>
             <button
-              onClick={() => session ? setActiveTab("prep") : setActiveTab("prep")}
+              onClick={() => user ? setActiveTab("prep") : setActiveTab("prep")}
               className={tabStyle("prep")}
             >
               Prep
@@ -916,7 +980,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "interviews" && !session && (
+            {activeTab === "interviews" && !user && (
               <motion.div
                 key="interviews-locked"
                 initial={{ opacity: 0, y: 10 }}
@@ -928,7 +992,7 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to view interview insights</p>
                   <button
-                    onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+                    onClick={handleSignIn}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
@@ -938,7 +1002,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "interviews" && session && (
+            {activeTab === "interviews" && user && (
               <motion.div
                 key="interviews"
                 initial={{ opacity: 0, y: 10 }}
@@ -1120,7 +1184,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "contacts" && !session && (
+            {activeTab === "contacts" && !user && (
               <motion.div
                 key="contacts-locked"
                 initial={{ opacity: 0, y: 10 }}
@@ -1132,7 +1196,7 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to view contact information</p>
                   <button
-                    onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+                    onClick={handleSignIn}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
@@ -1142,14 +1206,14 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "contacts" && session && (
+            {activeTab === "contacts" && user && (
               <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-4">People at {company}</h2>
                 {renderContacts()}
               </div>
             )}
 
-            {activeTab === "prep" && !session && (
+            {activeTab === "prep" && !user && (
               <motion.div
                 key="prep-locked"
                 initial={{ opacity: 0, y: 10 }}
@@ -1161,7 +1225,7 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to access preparation materials</p>
                   <button
-                    onClick={() => signIn("google", { callbackUrl: "/", prompt: "login" })}
+                    onClick={handleSignIn}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
@@ -1171,7 +1235,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "prep" && session && renderPrep()}
+            {activeTab === "prep" && user && renderPrep()}
           </AnimatePresence>
         </motion.div>
       )}
