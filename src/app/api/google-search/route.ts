@@ -4,6 +4,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const company = searchParams.get('company');
   const role = searchParams.get('role');
+  const university = searchParams.get('university');
 
   if (!company) {
     return NextResponse.json({ error: 'Company parameter is required' }, { status: 400 });
@@ -21,6 +22,9 @@ export async function GET(request: Request) {
     let query = `site:linkedin.com/in/ "${company}"`;
     if (role && role.trim() !== "") {
       query += ` "${role}"`;
+    }
+    if (university && university.trim() !== "") {
+      query += ` "${university}"`;
     }
     const response = await fetch(
       `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=10`

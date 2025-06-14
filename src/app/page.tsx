@@ -384,9 +384,9 @@ export default function Home() {
       setQuestions(qData.questions || []);
       setLoadingInterviews(false);
 
-      // Fetch Google search results for contacts (no role)
+      // Fetch Google search results for contacts
       const googleRes = await fetch(
-        `/api/google-search?company=${encodeURIComponent(query)}`
+        `/api/google-search?company=${encodeURIComponent(query)}&university=${encodeURIComponent(university)}`
       );
       const googleData = await googleRes.json();
       setGoogleResults(googleData.results || []);
@@ -531,44 +531,57 @@ export default function Home() {
     }`;
 
   const renderContacts = () => {
-    if (loadingContacts) {
-      return (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      );
-    }
-    if (googleResults.length === 0) {
-      return (
-        <div className="text-center py-8 text-[var(--text-secondary)]">
-          No contacts found for this company.
-        </div>
-      );
-    }
     return (
-      <div className="space-y-4">
-        {googleResults.map((result, index) => (
-          <div
-            key={index}
-            className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition"
-          >
-            <a
-              href={result.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <h3 className="text-lg font-medium mb-2 hover:text-[var(--accent)] transition">
-                {result.title}
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)]">
-                {result.snippet}
-              </p>
-            </a>
+      <div className="space-y-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search by university..."
+            value={university}
+            onChange={(e) => setUniversity(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-[var(--accent)]"
+          />
+          {loadingContacts && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 size={16} className="animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {loadingContacts ? (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
-        ))}
+        ) : googleResults.length === 0 ? (
+          <div className="text-center py-8 text-[var(--text-secondary)]">
+            {university ? "No contacts found for this university." : "No contacts found for this company."}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {googleResults.map((result, index) => (
+              <div
+                key={index}
+                className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition"
+              >
+                <a
+                  href={result.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <h3 className="text-lg font-medium mb-2 hover:text-[var(--accent)] transition">
+                    {result.title}
+                  </h3>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {result.snippet}
+                  </p>
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -705,6 +718,24 @@ export default function Home() {
       console.error("Error signing out:", error);
     }
   };
+
+  // Add effect to update contacts when university changes
+  useEffect(() => {
+    if (!company) return;
+    setLoadingContacts(true);
+    fetch(`/api/google-search?company=${encodeURIComponent(company)}&university=${encodeURIComponent(debouncedUniversity)}`)
+      .then(res => res.json())
+      .then(data => {
+        setGoogleResults(data.results || []);
+      })
+      .catch(error => {
+        setGoogleResults([]);
+        console.error("Error fetching filtered contacts:", error);
+      })
+      .finally(() => {
+        setLoadingContacts(false);
+      });
+  }, [debouncedUniversity, company]);
 
   // Show loading state
   if (loading) {
@@ -1206,12 +1237,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {activeTab === "contacts" && user && (
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">People at {company}</h2>
-                {renderContacts()}
-              </div>
-            )}
+            {activeTab === "contacts" && user && renderContacts()}
 
             {activeTab === "prep" && !user && (
               <motion.div
