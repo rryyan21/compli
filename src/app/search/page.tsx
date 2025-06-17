@@ -15,6 +15,9 @@ import { auth, provider, db } from "@/lib/firebase";
 import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from "firebase/auth";
 import { collection, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLLM } from '@/hooks/useLLM';
+import STARGenerator from '@/app/components/STARGenerator';
+import MockInterviewChatbot from '@/app/components/MockInterviewChatbot';
 
 const popularCompanies = [
   "Google",
@@ -278,6 +281,8 @@ export default function Home() {
     saved: false
   });
   const [selectedRole, setSelectedRole] = useState<string>("Software Engineer");
+  const [newsSummary, setNewsSummary] = useState<string | null>(null);
+  const { generateResponse, isLoading: isSummarizing } = useLLM();
 
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
@@ -595,6 +600,19 @@ export default function Home() {
     );
   };
 
+  const generateInterviewQuestions = async () => {
+    try {
+      const response = await generateResponse([
+        {
+          role: 'user',
+          content: `Based on ${selectedRole} role at ${company}, suggest 5 insightful questions a candidate can ask during the interview. Format each question with a brief explanation of why it's valuable to ask.`
+        }
+      ]);
+    } catch (error) {
+      console.error('Failed to generate questions:', error);
+    }
+  };
+
   const renderPrep = () => {
     if (!company) {
       return (
@@ -607,106 +625,35 @@ export default function Home() {
     const currentPlan = prepPlans[selectedRole];
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Ready to Apply Checklist</h3>
+          <h3 className="text-lg font-semibold mb-4">Interview Preparation</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-1">
+                Role
+              </label>
+              <input
+                type="text"
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                placeholder="e.g., Software Engineer, Product Manager"
+                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
             <button
-              onClick={toggleSaveCompany}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                companyNotes.saved
-                  ? "bg-blue-500 text-white"
-                  : "bg-white/10 text-white/60 hover:bg-white/20"
-              }`}
+              onClick={generateInterviewQuestions}
+              disabled={!selectedRole || !company}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {companyNotes.saved ? "Saved" : "Save Company"}
+              Generate Interview Questions
             </button>
           </div>
-          <div className="space-y-3">
-            {checklist.map(item => (
-              <div key={item.id} className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={item.done}
-                  onChange={() => toggleChecklistItem(item.id)}
-                  className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-blue-500"
-                />
-                <span className={item.done ? "line-through text-white/40" : ""}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Prep Notes</h3>
-            <textarea
-              value={companyNotes.notes}
-              onChange={(e) => updateNotes("notes", e.target.value)}
-              placeholder="Add your preparation notes here..."
-              className="w-full h-40 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Questions to Ask</h3>
-            <textarea
-              value={companyNotes.questions}
-              onChange={(e) => updateNotes("questions", e.target.value)}
-              placeholder="List questions you want to ask during interviews..."
-              className="w-full h-40 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold">7-Day Prep Plan</h3>
-            <select
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white focus:outline-none focus:border-blue-500"
-            >
-              {Object.keys(prepPlans).map(role => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-4">
-            {Object.entries(currentPlan).map(([day, content]) => (
-              <div key={day} className="bg-white/5 border border-white/10 rounded-lg p-4">
-                <h4 className="font-medium text-blue-400 mb-2">{day}</h4>
-                <h5 className="font-medium mb-2">{content.title}</h5>
-                <ul className="list-disc list-inside space-y-1 text-white/80">
-                  {content.tasks.map((task, index) => (
-                    <li key={index}>{task}</li>
-                  ))}
-                </ul>
-                {content.resources && (
-                  <div className="mt-3 pt-3 border-t border-white/10">
-                    <h6 className="text-sm font-medium text-white/60 mb-2">Resources:</h6>
-                    <ul className="space-y-1">
-                      {content.resources.map((resource, index) => (
-                        <li key={index}>
-                          <a
-                            href={resource}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 text-sm"
-                          >
-                            {resource}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <STARGenerator />
+        <MockInterviewChatbot company={company} role={selectedRole} />
       </div>
     );
   };
@@ -745,6 +692,23 @@ export default function Home() {
         setLoadingContacts(false);
       });
   }, [debouncedUniversity, company]);
+
+  const summarizeNews = async () => {
+    if (!company || news.length === 0) return;
+    
+    try {
+      const newsText = news.map(item => item.title).join('\n');
+      const response = await generateResponse([
+        {
+          role: 'user',
+          content: `Summarize these ${news.length} news stories about ${company} in 2 bullet points each:\n\n${newsText}`
+        }
+      ]);
+      setNewsSummary(response);
+    } catch (error) {
+      console.error('Failed to summarize news:', error);
+    }
+  };
 
   // Show loading state
   if (loading) {
@@ -963,10 +927,36 @@ export default function Home() {
                 transition={{ duration: 0.25 }}
                 className="space-y-3"
               >
-                <h4 className="font-semibold text-base mb-2 flex items-center gap-2">
-                  <Newspaper size={16} />
-                  <span className="tracking-wide">Recent News</span>
-                </h4>
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-semibold text-base flex items-center gap-2">
+                    <Newspaper size={16} />
+                    <span className="tracking-wide">Recent News</span>
+                  </h4>
+                  {news.length > 0 && (
+                    <button
+                      onClick={summarizeNews}
+                      disabled={isSummarizing}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium transition disabled:opacity-50"
+                    >
+                      {isSummarizing ? (
+                        <>
+                          <Loader2 size={14} className="inline mr-1 animate-spin" />
+                          Summarizing...
+                        </>
+                      ) : (
+                        'Summarize News'
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {newsSummary && (
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl mb-4">
+                    <h5 className="font-medium text-blue-400 mb-2">AI Summary</h5>
+                    <div className="whitespace-pre-line text-white/80">{newsSummary}</div>
+                  </div>
+                )}
+
                 {news.length > 0 ? (
                   news.map((item, index) => (
                     <motion.a
