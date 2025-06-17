@@ -14,15 +14,13 @@ import {
 import { auth, provider, db } from "@/lib/firebase";
 import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from "firebase/auth";
 import { collection, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const popularCompanies = [
   "Google",
   "Amazon",
-  "Meta",
   "Apple",
   "Netflix",
-  "Tesla",
   "OpenAI",
   "NVIDIA",
 ];
@@ -251,6 +249,7 @@ const prepPlans: Record<string, PrepPlan> = {
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState("");
@@ -282,6 +281,16 @@ export default function Home() {
 
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
+
+  const validTabs = ["overview", "news", "interviews", "contacts", "prep"];
+
+  useEffect(() => {
+    // On mount, check for ?tab= in the URL and set the active tab if valid
+    const tabParam = searchParams.get("tab");
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam as typeof activeTab);
+    }
+  }, [searchParams]);
 
   // Handle auth state changes
   useEffect(() => {
