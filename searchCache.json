@@ -272,5 +272,38 @@
     "hasCompanyInfo": true,
     "totalInterviews": 20,
     "questionsFound": 20
+  },
+  "youtube": {
+    "employer": "YouTube",
+    "difficulty": "AVERAGE",
+    "experience": "POSITIVE",
+    "jobTitle": "Vlogger/Youtuber",
+    "outcome": "NO_OFFER",
+    "process": "The interview process was both rigorous and insightful, offering me a platform to showcase my skills and experiences. As I progressed through each stage, from initial screening to final rounds, I gained a deeper understanding of the company's culture and expectations. The thoroughness of the process allowed me to demonstrate not only my qualifications but also my ability to adapt and thrive in dynamic environments. Overall, navigating through the interview journey provided me with valuable insights and an enriching experience that I'll carry forward into my professional endeavors\n",
+    "questions": [
+      "Why do I want to become a youtuber?",
+      "You are given an elephant. You can't give it away and you can't sell it. What do you do?",
+      "Tell me about you and your past experiences in this roll ",
+      "Why work for us here?",
+      "What are the specific technologies you've been working with?",
+      "Como você se vê daqui 5 anos?",
+      "Tell me about yourself, tell me about your experiences, how you would improve your favorite YouTube channel, how you would help creators, how you would prioritize creator requests, what analytics you would look at for certain things, what I learned from past experiences",
+      "What do you do for living ",
+      "i asked to make a 2d array ",
+      "Find out the way to solve this case ",
+      "Why do you want this job?",
+      "What would you do if you are given a task outside your day to day jobs? (Something along this line)",
+      "They wanted to know my experience",
+      "Qual sua área de atuação?\nLida bem com grupos?",
+      "How many subscribers and viewers.",
+      "How do you stay motivated?",
+      "How comfortable are you with leveraging?",
+      "I’m not sure why there’s a 30 word count here but I’ll just try to fill this part up is this 30 words yet?",
+      "What are the top challenges in this industry?"
+    ],
+    "interviewCount": 20,
+    "hasCompanyInfo": true,
+    "totalInterviews": 20,
+    "questionsFound": 19
   }
 }

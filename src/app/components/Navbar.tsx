@@ -18,8 +18,13 @@ export default function Navbar({ user }: { user?: any }) {
           <Link href="/">
             <span className="text-white/80 hover:text-white px-3 py-1 rounded transition font-medium">Home</span>
           </Link>
-          <Link href="/dashboard">
-            <span className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full shadow transition font-semibold">Dashboard</span>
+          {user && (
+            <Link href="/dashboard">
+              <span className="text-white/80 hover:text-white px-3 py-1 rounded transition font-medium">Dashboard</span>
+            </Link>
+          )}
+          <Link href="/search">
+            <span className="text-white/80 hover:text-white px-3 py-1 rounded transition font-medium">Search</span>
           </Link>
           {!user && <SignInButton />}
           {user && (
