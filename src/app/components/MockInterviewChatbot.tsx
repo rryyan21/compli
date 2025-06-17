@@ -9,7 +9,7 @@ interface ChatMessage {
   content: string;
 }
 
-export default function MockInterviewChatbot({ company, role }: { company?: string; role?: string }) {
+export default function MockInterviewChatbot({ company, role, handleMockInterviewComplete }: { company?: string; role?: string; handleMockInterviewComplete?: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',

@@ -43,7 +43,9 @@ export function useLLM(): UseLLMReturn {
       }
 
       const data = await response.json();
-      return data.choices[0].message.content;
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) throw new Error('No AI response received');
+      return content;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);

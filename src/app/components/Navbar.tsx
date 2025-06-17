@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import SignInButton from "./SignInButton";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function Navbar({ user }: { user?: any }) {
   return (
@@ -31,6 +33,12 @@ export default function Navbar({ user }: { user?: any }) {
             <div className="flex items-center gap-2 ml-4">
               <img src={user.photoURL} alt="avatar" className="w-8 h-8 rounded-full border-2 border-white/30 shadow" />
               <span className="text-white/80 text-sm">{user.displayName}</span>
+              <button
+                onClick={() => signOut(auth)}
+                className="ml-2 px-3 py-1 rounded bg-white/10 text-white text-xs hover:bg-red-500/80 transition"
+              >
+                Sign out
+              </button>
             </div>
           )}
         </div>

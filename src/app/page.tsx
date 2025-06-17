@@ -33,14 +33,14 @@ export default function Home() {
         const data = await res.json();
         setError(data.error || "Failed to send feedback. Please try again later.");
       }
-    } catch {
+        } catch {
       setError("Failed to send feedback. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
+    return (
     <main className="min-h-screen w-full bg-gradient-to-br from-black via-gray-900 to-gray-950 flex flex-col items-center justify-start px-4">
       {/* Hero Section */}
       <section className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center text-center pt-32 pb-20">
@@ -102,8 +102,8 @@ export default function Home() {
             <div className="text-green-400 text-lg font-semibold py-8">Thank you for your feedback!</div>
           ) : (
             <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
-              <input
-                type="text"
+      <input
+        type="text"
                 placeholder="Name (optional)"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -134,7 +134,7 @@ export default function Home() {
               </button>
             </form>
           )}
-        </div>
+          </div>
       </section>
 
       {/* Call to Action Footer */}
@@ -144,7 +144,7 @@ export default function Home() {
         <Link href="/search">
           <button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-10 py-4 rounded-full text-xl font-bold shadow-lg transition-all">
             Start Searching
-          </button>
+                  </button>
         </Link>
       </section>
     </main>

@@ -281,6 +281,7 @@ export default function Home() {
   const [selectedRole, setSelectedRole] = useState<string>("Software Engineer");
   const [newsSummary, setNewsSummary] = useState<string | null>(null);
   const { generateResponse, isLoading: isSummarizing } = useLLM();
+  const [toast, setToast] = useState<string | null>(null);
 
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
@@ -730,7 +731,6 @@ export default function Home() {
                 className="w-12 h-12 object-contain rounded-md border"
                 onError={(e) => (e.currentTarget.style.display = "none")}
               />
-
               <div>
                 <p className="text-lg font-semibold">
                   {new URL(url).hostname.replace("www.", "")}
@@ -744,6 +744,15 @@ export default function Home() {
                   {url}
                 </a>
               </div>
+              <button
+                onClick={() => {
+                  toggleSaveCompany();
+                  setToast(companyNotes.saved ? 'Company unsaved.' : 'Company saved!');
+                }}
+                className={`ml-4 px-4 py-2 rounded-full font-semibold text-sm transition-all shadow ${companyNotes.saved ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-blue-500/80 hover:text-white'}`}
+              >
+                {companyNotes.saved ? 'Saved' : 'Save Company'}
+              </button>
             </div>
           )}
 
@@ -1093,6 +1102,11 @@ export default function Home() {
             {activeTab === "contacts" && user && renderContacts()}
           </AnimatePresence>
         </motion.div>
+      )}
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 bg-blue-600/90 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
+          {toast}
+        </div>
       )}
     </main>
   );

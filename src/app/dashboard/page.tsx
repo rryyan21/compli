@@ -14,6 +14,19 @@ interface SavedCompany {
   checklistProgress: number;
 }
 
+// Simple Toast component
+function Toast({ message, onClose }: { message: string, onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  return (
+    <div className="fixed top-6 right-6 z-50 bg-blue-600/90 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
+      {message}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [savedCompanies, setSavedCompanies] = useState<SavedCompany[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -22,8 +35,10 @@ export default function Dashboard() {
   const [selectedCompany, setSelectedCompany] = useState(savedCompanies[0]?.name || "");
   const [selectedRole, setSelectedRole] = useState(savedCompanies[0]?.role || "");
   const [generatedQuestions, setGeneratedQuestions] = useState<string | null>(null);
-  const { generateResponse, isLoading: isGeneratingQuestions } = useLLM();
+  const { generateResponse, isLoading: isGeneratingQuestions, error: llmError } = useLLM();
   const [activeTab, setActiveTab] = useState<'companies' | 'prep'>('companies');
+  const [toast, setToast] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -70,9 +85,18 @@ export default function Dashboard() {
         }
       ]);
       setGeneratedQuestions(response);
+      setToast('Interview questions generated!');
     } catch (error) {
+      setToast('Failed to generate questions.');
       console.error('Failed to generate questions:', error);
     }
+  };
+
+  // Example: Show confetti when mock interview is completed (placeholder)
+  const handleMockInterviewComplete = () => {
+    setShowConfetti(true);
+    setToast('Mock interview completed!');
+    setTimeout(() => setShowConfetti(false), 2500);
   };
 
   if (loading) {
@@ -86,6 +110,8 @@ export default function Dashboard() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-2 md:px-6 bg-black text-white">
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      {showConfetti && <div className="fixed inset-0 z-40 pointer-events-none">{/* Confetti animation placeholder */}<div className="w-full h-full flex items-center justify-center text-6xl">🎉</div></div>}
       <div className="w-full max-w-6xl mx-auto flex flex-row gap-8">
         {/* Floating Glassy Sidebar */}
         <div
@@ -182,7 +208,17 @@ export default function Dashboard() {
               )}
             </div>
           )}
-          {activeTab === 'prep' && (
+          {activeTab === 'prep' && savedCompanies.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 text-center">
+              <p className="text-white/70 mb-4">No saved companies yet. Go to Search and save a company to start prepping!</p>
+              <button
+                className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-full font-semibold shadow"
+                onClick={() => router.push('/search')}
+              >
+                Go to Search
+              </button>
+            </div>
+          ) : activeTab === 'prep' && (
             <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 flex flex-col gap-8">
               <h2 className="text-2xl font-bold mb-2 text-center">Prep Center</h2>
               <div className="flex flex-col md:flex-row gap-4 mb-2">
@@ -219,6 +255,9 @@ export default function Dashboard() {
                     'Generate Interview Questions'
                   )}
                 </button>
+                {llmError && (
+                  <div className="text-red-400 text-sm mt-2">{llmError}</div>
+                )}
                 {generatedQuestions && (
                   <div className="mt-4 p-4 bg-white/10 rounded-lg">
                     <h4 className="font-medium mb-2">Generated Questions:</h4>
@@ -231,7 +270,7 @@ export default function Dashboard() {
                 <STARGenerator />
               </div>
               {/* Mock Interview Chatbot */}
-              <MockInterviewChatbot company={selectedCompany} role={selectedRole} />
+              <MockInterviewChatbot company={selectedCompany} role={selectedRole} handleMockInterviewComplete={handleMockInterviewComplete} />
             </div>
           )}
         </div>
