@@ -16,8 +16,6 @@ import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User }
 import { collection, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLLM } from '@/hooks/useLLM';
-import STARGenerator from '@/app/components/STARGenerator';
-import MockInterviewChatbot from '@/app/components/MockInterviewChatbot';
 
 const popularCompanies = [
   "Google",
@@ -600,116 +598,6 @@ export default function Home() {
     );
   };
 
-  const generateInterviewQuestions = async () => {
-    try {
-      const response = await generateResponse([
-        {
-          role: 'user',
-          content: `Based on ${selectedRole} role at ${company}, suggest 5 insightful questions a candidate can ask during the interview. Format each question with a brief explanation of why it's valuable to ask.`
-        }
-      ]);
-    } catch (error) {
-      console.error('Failed to generate questions:', error);
-    }
-  };
-
-  const renderPrep = () => {
-    if (!company) {
-      return (
-        <div className="text-center text-white/60 py-8">
-          Search for a company to see preparation checklist
-        </div>
-      );
-    }
-
-    const currentPlan = prepPlans[selectedRole];
-
-    return (
-      <div className="space-y-8">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Interview Preparation</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white/80 mb-1">
-                Role
-              </label>
-              <input
-                type="text"
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                placeholder="e.g., Software Engineer, Product Manager"
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <button
-              onClick={generateInterviewQuestions}
-              disabled={!selectedRole || !company}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Generate Interview Questions
-            </button>
-          </div>
-        </div>
-
-        <STARGenerator />
-        <MockInterviewChatbot company={company} role={selectedRole} />
-      </div>
-    );
-  };
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await firebaseSignOut(auth);
-      // No redirect, just let the UI update
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
-  // Add effect to update contacts when university changes
-  useEffect(() => {
-    if (!company) return;
-    setLoadingContacts(true);
-    fetch(`/api/google-search?company=${encodeURIComponent(company)}&university=${encodeURIComponent(debouncedUniversity)}`)
-      .then(res => res.json())
-      .then(data => {
-        setGoogleResults(data.results || []);
-      })
-      .catch(error => {
-        setGoogleResults([]);
-        console.error("Error fetching filtered contacts:", error);
-      })
-      .finally(() => {
-        setLoadingContacts(false);
-      });
-  }, [debouncedUniversity, company]);
-
-  const summarizeNews = async () => {
-    if (!company || news.length === 0) return;
-    
-    try {
-      const newsText = news.map(item => item.title).join('\n');
-      const response = await generateResponse([
-        {
-          role: 'user',
-          content: `Summarize these ${news.length} news stories about ${company} in 2 bullet points each:\n\n${newsText}`
-        }
-      ]);
-      setNewsSummary(response);
-    } catch (error) {
-      console.error('Failed to summarize news:', error);
-    }
-  };
-
   // Show loading state
   if (loading) {
     return (
@@ -892,12 +780,6 @@ export default function Home() {
             >
               <Mail size={14} className="inline mr-1" /> Contacts
             </button>
-            <button
-              onClick={() => user ? setActiveTab("prep") : setActiveTab("prep")}
-              className={tabStyle("prep")}
-            >
-              Prep
-            </button>
           </div>
 
           <AnimatePresence mode="wait">
@@ -934,7 +816,7 @@ export default function Home() {
                   </h4>
                   {news.length > 0 && (
                     <button
-                      onClick={summarizeNews}
+                      onClick={() => {}}
                       disabled={isSummarizing}
                       className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium transition disabled:opacity-50"
                     >
@@ -994,7 +876,7 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to view interview insights</p>
                   <button
-                    onClick={handleSignIn}
+                    onClick={() => {}}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
@@ -1198,7 +1080,7 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to view contact information</p>
                   <button
-                    onClick={handleSignIn}
+                    onClick={() => {}}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
@@ -1209,30 +1091,6 @@ export default function Home() {
             )}
 
             {activeTab === "contacts" && user && renderContacts()}
-
-            {activeTab === "prep" && !user && (
-              <motion.div
-                key="prep-locked"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="text-center py-8"
-              >
-                <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
-                  <p className="text-white/60 mb-4">Please sign in to access preparation materials</p>
-                  <button
-                    onClick={handleSignIn}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
-                  >
-                    <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
-                    Sign in
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "prep" && user && renderPrep()}
           </AnimatePresence>
         </motion.div>
       )}
