@@ -279,8 +279,7 @@ export default function Home() {
     saved: false
   });
   const [selectedRole, setSelectedRole] = useState<string>("Software Engineer");
-  const [newsSummary, setNewsSummary] = useState<string | null>(null);
-  const { generateResponse, isLoading: isSummarizing } = useLLM();
+  const { generateResponse } = useLLM();
   const [toast, setToast] = useState<string | null>(null);
 
   const resultRef = useRef<HTMLDivElement>(null);
@@ -343,7 +342,7 @@ export default function Home() {
     }
   }, []);
 
-  const updateHistory = (name: string) => {
+  const updateHistory = async (name: string) => {
     const normalized = name.toLowerCase(); // or use .trim().toLowerCase() for extra safety
     const updated = [
       normalized,
@@ -351,6 +350,51 @@ export default function Home() {
     ].slice(0, 8);
     setHistory(updated);
     safeLocalStorage.setItem("searchHistory", JSON.stringify(updated));
+
+    // Check if we already have a cached mission summary for this company
+    const cachedMission = safeLocalStorage.getItem(`mission-${normalized}`);
+    if (cachedMission) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[SearchClient] Using cached mission summary for', name);
+      }
+      setSummary(cachedMission);
+      return;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[SearchClient] Requesting mission summary for', name);
+    }
+
+    // Generate mission & values summary using LLM
+    try {
+      const response = await generateResponse([
+        {
+          role: 'user',
+          content: `In 2–3 concise sentences and without any additional commentary or internal reasoning, describe the core mission and values of the company \"${name}\" so an applicant can reference them before interviews. Respond plainly.`
+        }
+      ]);
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[SearchClient] Mission summary received:', response);
+      }
+
+      if (response) {
+        // Remove any tags like <think>, trim quotes, shorten to 3 sentences max
+        let cleaned = response.replace(/<[^>]+>/g, '').trim();
+        cleaned = cleaned.replace(/^"+|"+$/g, ''); // strip wrapping quotes
+
+        // Split into sentences and keep the first 3 for brevity
+        const sentences = cleaned.split(/(?<=[.!?])\s+/).slice(0, 3);
+        cleaned = sentences.join('\n');
+
+        // Cache for future visits
+        safeLocalStorage.setItem(`mission-${normalized}`, cleaned);
+
+        setSummary(cleaned);
+      }
+    } catch (err) {
+      console.error('LLM mission generation failed:', err);
+    }
   };
 
   const searchCompany = async (input?: string) => {
@@ -381,12 +425,10 @@ export default function Home() {
           index === self.findIndex((t) => t.title === item.title)
       );
       setUrl(data.url);
-      setSummary(data.summary);
       setNews(uniqueNews);
       setLinkedins(data.linkedins || []);
       setActiveTab("overview");
-      updateHistory(query);
-      setLoading(false);
+      await updateHistory(query);
 
       // Fetch interview data
       const qRes = await fetch(
@@ -410,6 +452,7 @@ export default function Home() {
       setLoadingInterviews(false);
       setLoadingContacts(false);
     } finally {
+      setLoading(false);
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -823,30 +866,7 @@ export default function Home() {
                     <Newspaper size={16} />
                     <span className="tracking-wide">Recent News</span>
                   </h4>
-                  {news.length > 0 && (
-                    <button
-                      onClick={() => {}}
-                      disabled={isSummarizing}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium transition disabled:opacity-50"
-                    >
-                      {isSummarizing ? (
-                        <>
-                          <Loader2 size={14} className="inline mr-1 animate-spin" />
-                          Summarizing...
-                        </>
-                      ) : (
-                        'Summarize News'
-                      )}
-                    </button>
-                  )}
                 </div>
-
-                {newsSummary && (
-                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl mb-4">
-                    <h5 className="font-medium text-blue-400 mb-2">AI Summary</h5>
-                    <div className="whitespace-pre-line text-white/80">{newsSummary}</div>
-                  </div>
-                )}
 
                 {news.length > 0 ? (
                   news.map((item, index) => (

@@ -22,8 +22,9 @@ export function useLLM(): UseLLMReturn {
 
     try {
       const user = auth.currentUser;
-      if (!user) {
-        throw new Error('User must be signed in to use AI features');
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[useLLM] Sending messages to LLM:', messages);
       }
 
       const response = await fetch('/api/llm', {
@@ -33,7 +34,7 @@ export function useLLM(): UseLLMReturn {
         },
         body: JSON.stringify({
           messages,
-          userId: user.uid,
+          userId: user ? user.uid : 'public',
         }),
       });
 
@@ -43,7 +44,17 @@ export function useLLM(): UseLLMReturn {
       }
 
       const data = await response.json();
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[useLLM] Raw LLM response:', data);
+      }
+
       const content = data?.choices?.[0]?.message?.content;
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[useLLM] Extracted content:', content);
+      }
+
       if (!content) throw new Error('No AI response received');
       return content;
     } catch (err) {

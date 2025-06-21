@@ -1,20 +1,30 @@
 {
-  "timestamp": 1750179370984,
+  "timestamp": 1750477628000,
   "results": [
-    {
-      "title": "Francesco Carucci - NVIDIA",
-      "link": "https://www.linkedin.com/in/fcarucci",
-      "snippet": "Senior Technical Lead and Engineering Manager in the Gaming and Rendering fields… · Experience: NVIDIA · Education: Politecnico di Torino · Location: San ..."
-    },
     {
       "title": "Amanda Saunders - NVIDIA",
       "link": "https://www.linkedin.com/in/amandamsaunders",
       "snippet": "A bright, energetic, self driven and goal oriented individual. My passion is working with… · Experience: NVIDIA · Location: Greater Boston · 500+ ..."
     },
     {
+      "title": "Francesco Carucci - NVIDIA",
+      "link": "https://www.linkedin.com/in/fcarucci",
+      "snippet": "Senior Technical Lead and Engineering Manager in the Gaming and Rendering fields… · Experience: NVIDIA · Education: Politecnico di Torino · Location: San ..."
+    },
+    {
       "title": "Mike Geyer - NVIDIA",
       "link": "https://www.linkedin.com/in/geyermike",
       "snippet": "Experience: NVIDIA · Location: Portland · 500+ connections on LinkedIn. View Mike Geyer's profile on LinkedIn, a professional community of 1 billion ..."
+    },
+    {
+      "title": "Malcolm deMayo - NVIDIA",
+      "link": "https://www.linkedin.com/in/malcolmdemayo",
+      "snippet": "Striving to understand our customer's goals and applying innovative technology to help… · Experience: NVIDIA · Location: New York · 500+ connections on ..."
+    },
+    {
+      "title": "Marc Hamilton - NVIDIA",
+      "link": "https://www.linkedin.com/in/marchamilton",
+      "snippet": "Experience: NVIDIA · Location: San Francisco Bay Area · 500+ connections on LinkedIn. View Marc Hamilton's profile on LinkedIn, a professional community of ..."
     },
     {
       "title": "Aaron Erickson - NVIDIA",
@@ -27,14 +37,9 @@
       "snippet": "Experience: NVIDIA · Education: UW Foster School of Business · Location: San Francisco Bay Area · 500+ connections on LinkedIn. View Matthew Hull's profile ..."
     },
     {
-      "title": "Mark Moyou, PhD - NVIDIA",
-      "link": "https://www.linkedin.com/in/markmoyou",
-      "snippet": "I work with Enterprise teams to get their machine-learning models into production. I also… · Experience: NVIDIA · Education: Florida Institute of Technology ..."
-    },
-    {
-      "title": "Jared Carl - Global Account Manager - Edge and Telco - NVIDIA ...",
-      "link": "https://www.linkedin.com/in/jared-carl-7998215",
-      "snippet": "Infinitely curious, reliably useful · Experience: NVIDIA · Education: Norwich University · Location: Austin, Texas Metropolitan Area · 500+ connections on ..."
+      "title": "Bethann Noble - NVIDIA",
+      "link": "https://www.linkedin.com/in/bethanoble",
+      "snippet": "Bethann is a senior marketing leader with deep experience directing marketing programs… · Experience: NVIDIA · Education: The University of Texas at Austin ..."
     },
     {
       "title": "Piotr Żelasko - Principal Research Scientist - NVIDIA",
@@ -42,14 +47,9 @@
       "snippet": "Speech & Language AI @ Nvidia · I'm passionate about all things audio related - music, room acoustics, speech processing - you name it."
     },
     {
-      "title": "Bethann Noble - NVIDIA",
-      "link": "https://www.linkedin.com/in/bethanoble",
-      "snippet": "Bethann is a senior marketing leader with deep experience directing marketing programs… · Experience: NVIDIA · Education: The University of Texas at Austin ..."
-    },
-    {
-      "title": "Marc Hamilton - NVIDIA",
-      "link": "https://www.linkedin.com/in/marchamilton",
-      "snippet": "Experience: NVIDIA · Location: San Francisco Bay Area · 500+ connections on LinkedIn. View Marc Hamilton's profile on LinkedIn, a professional community of ..."
+      "title": "Rochelle Pereira - Senior Director of Engineering - NVIDIA",
+      "link": "https://www.linkedin.com/in/rochelle-p",
+      "snippet": "Rochelle Pereira. Senior Director of Engineering - AI/CV/Multimedia Streaming. NVIDIA The University of Texas at Arlington ..."
     }
   ]
 }
