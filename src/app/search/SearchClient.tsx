@@ -285,6 +285,9 @@ export default function Home() {
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
 
+  // Refs
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const validTabs = ["overview", "news", "interviews", "contacts", "prep"];
 
   useEffect(() => {
@@ -351,13 +354,23 @@ export default function Home() {
     setHistory(updated);
     safeLocalStorage.setItem("searchHistory", JSON.stringify(updated));
 
-    // Check if we already have a cached mission summary for this company
-    const cachedMission = safeLocalStorage.getItem(`mission-${normalized}`);
-    if (cachedMission) {
+    // Retrieve mission cache object
+    let missionCache: Record<string, string> = {};
+    const rawCache = safeLocalStorage.getItem('missionCache');
+    if (rawCache) {
+      try {
+        missionCache = JSON.parse(rawCache);
+      } catch {
+        missionCache = {};
+      }
+    }
+
+    // Return cached summary if available
+    if (missionCache[normalized]) {
       if (process.env.NODE_ENV !== 'production') {
         console.log('[SearchClient] Using cached mission summary for', name);
       }
-      setSummary(cachedMission);
+      setSummary(missionCache[normalized]);
       return;
     }
 
@@ -387,8 +400,9 @@ export default function Home() {
         const sentences = cleaned.split(/(?<=[.!?])\s+/).slice(0, 3);
         cleaned = sentences.join('\n');
 
-        // Cache for future visits
-        safeLocalStorage.setItem(`mission-${normalized}`, cleaned);
+        // Cache for future visits (single object)
+        missionCache[normalized] = cleaned;
+        safeLocalStorage.setItem('missionCache', JSON.stringify(missionCache));
 
         setSummary(cleaned);
       }
@@ -642,6 +656,33 @@ export default function Home() {
     );
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInputLike = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      // Focus search: press '/'
+      if (e.key === '/' && !isInputLike) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+
+      // Tab switching only when results visible
+      if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && url) {
+        const order = ['overview','news','interviews','contacts','prep'];
+        const idx = order.indexOf(activeTab);
+        if (idx !== -1) {
+          const nextIdx = e.key === 'ArrowLeft' ? (idx - 1 + order.length) % order.length : (idx + 1) % order.length;
+          setActiveTab(order[nextIdx] as typeof activeTab);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [activeTab, url]);
+
   // Show loading state
   if (loading) {
     return (
@@ -676,6 +717,7 @@ export default function Home() {
         value={company}
         onChange={(e) => setCompany(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && searchCompany()}
+        ref={searchInputRef}
         className="border px-4 py-2 rounded w-full max-w-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
       />
 
