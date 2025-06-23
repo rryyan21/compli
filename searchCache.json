@@ -305,5 +305,39 @@
     "hasCompanyInfo": true,
     "totalInterviews": 20,
     "questionsFound": 19
+  },
+  "hubspot": {
+    "employer": "HubSpot",
+    "difficulty": "AVERAGE",
+    "experience": "POSITIVE",
+    "jobTitle": "Customer Support Specialist",
+    "outcome": "NO_OFFER",
+    "process": "I had a very positive experience with the recruitment process. Everything full transparent the recruiter Katie did an excellent job throughout the whole process. \n\nRound 1:\nA screening call with the recruiter, where I was given an overview of the Mid-Market business across Australia and New Zealand. I shared my career background, motivations, and why I was specifically interested in HubSpot\n\nRound 2:\nThis consisted of two parts. First was a competency-based interview with a sales manager, followed by a cold call role play. The scenario involved following up with a company that had downloaded content or visited the HubSpot website, and the goal was to assess their needs through effective questioning.\n\nRound 3: \nThe 3rd part was a deeper discovery role play with another manager. This was a follow-up meeting from the initial call, where I had to run a full discovery, qualify the lead using BANT, and agree on next steps. There were also more competency-based questions during this stage.\n\nFinal Round:\nA 30-minute Q&amp;A session with another sales manager, focused more on fit, mindset, and clarifying any remaining questions from both sides.\n\n\n",
+    "questions": [
+      "Tell me about a time when you had to make a decision that was good for the company and bad for the customer",
+      "\"Tell me about a time you received feedback you didn't agree with. How did you handle it?\"",
+      "Cual es tu expectativa laboral?",
+      "They asked many kinds of situational questions ",
+      "Tell us about an impactful marketing campaign you drove and the results you saw.",
+      "Asked about hoisting in JS",
+      "Do you have prior experience?",
+      "Simulate a chat with the test person via zoom\n\nSimulate a phone call with the test persion via the same zoom\n\nWhy is a import not working, and what is causing it to fail?\n\nWhy is a Hubspot autofilling as the contacts company on a import? How to enable or disable that?",
+      "Lots of questions about impact",
+      "They asked for examples of features I have led.",
+      "Tell me about a project you worked on that you were proud of? ",
+      "Tell me about your most complex sale",
+      "Leetcode easy merge 2 lists",
+      "Why Sales? Why HubSpot? Basic behavioral questions ",
+      "How would you go about tiring prospect accounts? \n\nWhy do you want to work for Hubspot? \n\nTell me about your approach to managing key deals? \n\n",
+      "Cifras de consecución\nExperiencia Previa \nPor que te vendrías a Hubspot y dejarías tu puesto actual",
+      "Lots of STAR based questions about experiences",
+      "design netflix + lc easy",
+      "- In your current sales work, tell me a time which you face to difficulty ?\n- Introduce yourself",
+      "Can you remember one situation where you dealt with a difficult customer?"
+    ],
+    "interviewCount": 20,
+    "hasCompanyInfo": true,
+    "totalInterviews": 20,
+    "questionsFound": 20
   }
 }

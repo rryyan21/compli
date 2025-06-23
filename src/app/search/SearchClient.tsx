@@ -282,6 +282,45 @@ export default function Home() {
   const { generateResponse } = useLLM();
   const [toast, setToast] = useState<string | null>(null);
 
+  /* ------------------------------------------------------------------
+   * Google Authentication (used for locked Interview / Contacts tabs)
+   * ------------------------------------------------------------------ */
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  const handleSignIn = async () => {
+    try {
+      setIsSigningIn(true);
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged listener will update `user` state automatically.
+      // Refresh page to sync server-side data if required.
+      window.location.reload();
+    } catch (err) {
+      console.error("Error signing in with Google:", err);
+      setToast("Sign-in failed. Please try again.");
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  // Dynamic loading messages to keep users engaged during longer load times
+  const loadingMessages = [
+    "Fetching the most up-to-date information…",
+    "Our AI helper is working…",
+    "Almost done…"
+  ];
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Cycle through loading messages whenever a loading state is active
+  useEffect(() => {
+    if (loading) {
+      setLoadingMessageIndex(0); // reset when a new loading phase starts
+      const interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      }, 3000); // update every 3 seconds
+      return () => clearInterval(interval);
+    }
+  }, [loading]);
+
   const resultRef = useRef<HTMLDivElement>(null);
   const debouncedUniversity = useDebounce(university, 500);
 
@@ -689,7 +728,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <p>{loadingMessages[loadingMessageIndex]}</p>
         </div>
       </div>
     );
@@ -790,7 +829,9 @@ export default function Home() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Loader2 size={16} className="animate-spin" />
-              <span className="text-sm">Loading company information...</span>
+              <span className="text-sm">
+                {loadingMessages[loadingMessageIndex]}
+              </span>
             </div>
             <SkeletonLine width="100%" />
             <SkeletonLine width="80%" />
@@ -947,11 +988,12 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to view interview insights</p>
                   <button
-                    onClick={() => {}}
+                    onClick={handleSignIn}
+                    disabled={isSigningIn}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
-                    Sign in
+                    {isSigningIn ? 'Signing in...' : 'Sign in'}
                   </button>
                 </div>
               </motion.div>
@@ -1151,11 +1193,12 @@ export default function Home() {
                 <div className="bg-white/5 border border-white/10 p-6 rounded-xl max-w-sm mx-auto">
                   <p className="text-white/60 mb-4">Please sign in to view contact information</p>
                   <button
-                    onClick={() => {}}
+                    onClick={handleSignIn}
+                    disabled={isSigningIn}
                     className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
-                    Sign in
+                    {isSigningIn ? 'Signing in...' : 'Sign in'}
                   </button>
                 </div>
               </motion.div>
