@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --surface: rgba(0, 0, 0, 0.02);
+  --surface-border: rgba(0, 0, 0, 0.1);
 
   /* Compli Brand Colors */
   --accent: #1f3a40;
@@ -24,6 +26,8 @@
   :root {
     --background: #0a0a0a;
     --foreground: var(--text-primary);
+    --surface: rgba(255, 255, 255, 0.05);
+    --surface-border: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -31,4 +35,95 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Manual theme overrides via class on <html> */
+html.light-mode {
+  /* Palette for light theme */
+  --background: #f5f8fa; /* subtle blue-gray */
+  --foreground: #17202a;
+  --surface: #ffffff;
+  --surface-border: rgba(0, 0, 0, 0.08);
+  --text-primary: #17202a;
+
+  /* Accent remains same brand color */
+  --accent: #1f3a40; /* dark teal */
+  --accent-hover: #274d57;
+
+  /* Buttons */
+  --button-text: #ffffff;
+
+  /* Override Tailwind utility classes that are hard-coded to white */
+  /* Text colors */
+  & [class*="text-white"] {
+    color: var(--foreground) !important;
+  }
+
+  /* Backgrounds with white tint */
+  & [class*="bg-white\\/5"],
+  & [class*="bg-white\\/10"],
+  & [class*="bg-white\\/20"],
+  & [class*="bg-white\\/30"] {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* Solid white backgrounds */
+  & [class*="bg-white"] {
+    background-color: #f9f9f9 !important;
+  }
+
+  /* Borders */
+  & [class*="border-white\\/10"],
+  & [class*="border-white\\/20"],
+  & [class*="border-white\\/30"] {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Blue utility classes remapped to accent for consistency */
+  & [class*="bg-blue-500"] {
+    background-color: var(--accent) !important;
+  }
+  & [class*="hover:bg-blue-600"],
+  & [class*="bg-blue-600"] {
+    background-color: var(--accent-hover) !important;
+  }
+}
+
+html.dark-mode {
+  --background: #0a0a0a;
+  --foreground: var(--text-primary);
+  --surface: #141414; /* darker card for better white text contrast */
+  --surface-border: rgba(255, 255, 255, 0.12);
+  --text-primary: #e1e5e7;
+  --button-text: #ffffff;
+
+  /* Secondary buttons: keep text readable */
+  & .btn-secondary {
+    color: var(--text-primary) !important;
+  }
+}
+
+/* ------------------------------------------------------
+   Design System Utilities (shared by light/dark themes)
+------------------------------------------------------ */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center font-medium rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-medium rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 bg-[var(--accent)] text-[var(--button-text)] hover:bg-[var(--accent-hover)];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center font-medium rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 bg-transparent text-[var(--accent)] border border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--button-text)];
+  }
+
+  .btn-chip {
+    @apply inline-flex items-center justify-center font-medium rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-1 text-sm bg-[var(--accent)] text-[var(--button-text)] hover:bg-[var(--accent-hover)];
+  }
+
+  .card {
+    @apply bg-[var(--surface)] border border-[var(--surface-border)] backdrop-blur rounded-2xl shadow-lg;
+  }
 }

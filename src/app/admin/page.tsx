@@ -72,7 +72,7 @@ export default function AdminPage() {
 
   if (!user || user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] text-[var(--foreground)]">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
           <p>You don't have permission to view this page.</p>
@@ -82,7 +82,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">User Metrics</h1>
         <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">

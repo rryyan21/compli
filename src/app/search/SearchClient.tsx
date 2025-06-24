@@ -10,6 +10,10 @@ import {
   Briefcase,
   Loader2,
   Mail,
+  Clipboard,
+  CheckCircle,
+  XCircle,
+  Search as SearchIcon,
 } from "lucide-react";
 import { auth, provider, db } from "@/lib/firebase";
 import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from "firebase/auth";
@@ -629,14 +633,13 @@ export default function Home() {
     );
   };
 
-  const buttonStyle =
-    "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] text-sm px-4 py-1 rounded-full transition";
+  const buttonStyle = "btn-chip";
 
   const tabStyle = (tab: string) =>
     `px-4 py-1 rounded-full text-sm font-medium transition ${
       activeTab === tab
-        ? "bg-[var(--accent)] text-[var(--text-primary)]"
-        : "bg-white/10 text-[var(--text-primary)] hover:bg-white/20"
+        ? "bg-[var(--accent)] text-[var(--button-text)] shadow"
+        : "bg-[var(--surface)] border border-[var(--surface-border)] text-[var(--foreground)]/80 hover:bg-[var(--surface)]/70"
     }`;
 
   const renderContacts = () => {
@@ -722,10 +725,18 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handler);
   }, [activeTab, url]);
 
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
           <p>{loadingMessages[loadingMessageIndex]}</p>
@@ -735,7 +746,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-4 text-center bg-black text-[var(--text-primary)]">
+    <main className="min-h-screen flex flex-col items-center justify-start pt-24 px-4 text-center bg-[var(--background)] text-[var(--foreground)]">
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -750,20 +761,24 @@ export default function Home() {
         <h1 className="text-5xl font-semibold tracking-tight">Compli</h1>
       </motion.div>
 
-      <input
-        type="text"
-        placeholder="Enter a company name"
-        value={company}
-        onChange={(e) => setCompany(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && searchCompany()}
-        ref={searchInputRef}
-        className="border px-4 py-2 rounded w-full max-w-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-      />
+      {/* Fancy search bar */}
+      <div className="relative w-full max-w-md">
+        <SearchIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--foreground)]/60" />
+        <input
+          type="text"
+          placeholder="Enter a company name"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && searchCompany()}
+          ref={searchInputRef}
+          className="w-full pl-10 pr-4 py-3 rounded-full bg-[var(--surface)] border border-[var(--surface-border)] text-[var(--foreground)] placeholder-[var(--foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] shadow-sm"
+        />
+      </div>
 
       <button
         onClick={() => searchCompany()}
         disabled={!company || loading}
-        className="mt-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--text-primary)] px-4 py-2 rounded transition disabled:opacity-50 flex items-center gap-2"
+        className="btn-primary mt-4 flex items-center gap-2 disabled:opacity-50"
       >
         {loading && <Loader2 size={16} className="animate-spin" />}
         {loading ? "Searching..." : "Find Website"}
@@ -816,7 +831,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-16 bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl max-w-4xl w-full text-[var(--text-primary)] space-y-6 text-left backdrop-blur-sm"
+          className="card mt-16 p-6 shadow-xl max-w-4xl w-full text-[var(--text-primary)] space-y-6 text-left"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-white/10 rounded-md animate-pulse" />
@@ -847,7 +862,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="mt-16 bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl max-w-4xl w-full text-[var(--text-primary)] space-y-6 text-left backdrop-blur-sm"
+          className="card mt-16 p-6 shadow-xl max-w-4xl w-full text-[var(--text-primary)] space-y-6 text-left"
         >
           {url && url.startsWith("http") && (
             <div className="flex items-center gap-4">
@@ -875,7 +890,7 @@ export default function Home() {
                   toggleSaveCompany();
                   setToast(companyNotes.saved ? 'Company unsaved.' : 'Company saved!');
                 }}
-                className={`ml-4 px-4 py-2 rounded-full font-semibold text-sm transition-all shadow ${companyNotes.saved ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-blue-500/80 hover:text-white'}`}
+                className={`ml-4 btn-secondary ${companyNotes.saved ? '!bg-[var(--accent)] !text-[var(--button-text)]' : ''}`}
               >
                 {companyNotes.saved ? 'Saved' : 'Save Company'}
               </button>
@@ -927,10 +942,22 @@ export default function Home() {
                 transition={{ duration: 0.25 }}
                 className="space-y-4"
               >
-                <h4 className="font-semibold text-base mb-1 flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-1">
                   <Info size={16} />
-                  <span className="tracking-wide">Mission & Values</span>
-                </h4>
+                  <h4 className="font-semibold text-base tracking-wide">Mission & Values</h4>
+                  {summary && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(summary);
+                        setToast('Copied to clipboard!');
+                      }}
+                      title="Copy to clipboard"
+                      className="ml-1 p-1 rounded hover:bg-white/10 transition"
+                    >
+                      <Clipboard size={14} />
+                    </button>
+                  )}
+                </div>
                 <p className="text-base leading-relaxed italic">"{summary}"</p>
               </motion.div>
             )}
@@ -990,7 +1017,7 @@ export default function Home() {
                   <button
                     onClick={handleSignIn}
                     disabled={isSigningIn}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
+                    className="btn-primary flex items-center gap-2 mx-auto text-sm"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
                     {isSigningIn ? 'Signing in...' : 'Sign in'}
@@ -1195,7 +1222,7 @@ export default function Home() {
                   <button
                     onClick={handleSignIn}
                     disabled={isSigningIn}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-1.5 rounded-full text-white text-sm transition-all mx-auto"
+                    className="btn-primary flex items-center gap-2 mx-auto text-sm"
                   >
                     <img src="/google.svg" alt="Google logo" className="w-4 h-4" />
                     {isSigningIn ? 'Signing in...' : 'Sign in'}
@@ -1208,11 +1235,32 @@ export default function Home() {
           </AnimatePresence>
         </motion.div>
       )}
-      {toast && (
-        <div className="fixed top-6 right-6 z-50 bg-blue-600/90 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
-          {toast}
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-6 right-6 z-50 flex items-start gap-3 bg-white/10 backdrop-blur border border-white/20 px-4 py-3 rounded-xl shadow-lg"
+          >
+            {/* Icon based on message */}
+            {toast.toLowerCase().includes('fail') || toast.toLowerCase().includes('error') ? (
+              <XCircle size={20} className="text-red-400 shrink-0" />
+            ) : (
+              <CheckCircle size={20} className="text-green-400 shrink-0" />
+            )}
+            <span className="text-sm text-white/90 max-w-xs leading-snug">{toast}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-2 text-white/60 hover:text-white/90 text-xs"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

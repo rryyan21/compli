@@ -23,7 +23,7 @@ export default function SignInButton() {
     <button
       onClick={handleSignIn}
       disabled={isLoading}
-      className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-2 rounded-full shadow-lg text-white font-semibold text-sm hover:bg-white/20 transition-all"
+      className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] border border-[var(--surface-border)] px-5 py-2 rounded-full shadow-lg text-[var(--button-text)] font-semibold text-sm transition-all"
     >
       <img src="/google.svg" alt="Google logo" className="w-5 h-5" />
       {isLoading ? 'Signing in...' : 'Sign in with Google'}
